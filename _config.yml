@@ -13,12 +13,12 @@ permalink: /:title/
 
 # Authors
 authors:
-  Luca:
+  luca:
     name: Luca
     display_name: Luca
     avatar: 'assets/images/avatar.png'
     description: "Luca"
-  Oscar:
+  oscar:
     name: Oscar
     display_name: Oscar    
     avatar: 'assets/images/avatar.png'
