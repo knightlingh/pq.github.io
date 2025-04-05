@@ -21,7 +21,7 @@ comments: true
 <div class="sticky-top sticky-top-80">
 <h5>Buy me a muffin</h5>
 
-<a target="_blank" href="https://www.wowthemes.net/donate/" class="btn btn-danger">Buy me a coffee</a>
+<a target="_blank" href="" class="btn btn-danger">Buy me a muffin</a>
 
 </div>
 </div>
