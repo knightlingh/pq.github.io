@@ -3,7 +3,7 @@ layout: post
 title:  "This is The Lin Family"
 author: lins
 categories: [ family, intro ]
-image: assets/images/lin-family.jpg
+image: assets/images/lin-family.webp
 featured: true
 hidden: true
 ---
