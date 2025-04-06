@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "This is Lin family"
-author: luca
-categories: [ Jekyll, tutorial ]
+title:  "This is The Lin Family"
+author: lins
+categories: [ family, intro ]
 image: assets/images/lin-family.png
 featured: true
 hidden: true
