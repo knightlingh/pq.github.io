@@ -10,7 +10,7 @@ comments: false
 
 <p>This is lin family!</p>
 
-<p class="mb-5"><img class="shadow-lg" src="{{site.baseurl}}/assets/images/lin-family.png" alt="lin family" /></p>
+<p class="mb-5"><img class="shadow-lg" src="{{site.baseurl}}/assets/images/lin-family.webp" alt="lin family" /></p>
 
 </div>
 
@@ -19,8 +19,11 @@ comments: false
 <div class="sticky-top sticky-top-80">
 <h5>Buy me a donut</h5>
 
-<a target="_blank" href="" class="btn btn-danger">Buy me a donut</a>
-
+<div style="text-align: center;">
+    <a href="https://www.buymeacoffee.com/thelinfamily" target="_blank">
+        <img src="{{site.baseurl}}/assets/images/donut.webp" alt="Buy Me a Donut" style="height: 50px;">
+    </a>
+</div>
 </div>
 </div>
 </div>
