@@ -3,7 +3,7 @@ layout: post
 title:  "The DM guide"
 author: oscar
 categories: [ game, RPG ]
-image: assets/images/oscar/dm.jpg
+image: assets/images/oscar/dm.webp
 ---
 I am a DM or a dungeon master, and here are some tips to make a fun campaign
 
