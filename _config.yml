@@ -7,7 +7,7 @@ favicon: 'assets/images/logo.png'
 baseurl: /
 google_analytics: 'UA-46278016-1'
 disqus: 'demowebsite'
-mailchimp-list: ''
+mailchimp-list: 'https://dev.us15.list-manage.com/subscribe/post?u=056ef2817df7de56170f860b2&amp;id=7b0f5d608a&amp;f_id=00e291e0f0'
 include: ["_pages"]
 permalink: /:title/
 
