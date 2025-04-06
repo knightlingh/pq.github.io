@@ -7,6 +7,7 @@ image: assets/images/lin-family.png
 featured: true
 hidden: true
 ---
+Whether it's a cool science experiment, a fun weekend project, or a wild idea turned into reality, we hope you’ll find something here that makes you smile, think, or say, “Hey, we could try that!”
 
 ### 👋 Hello and Welcome!
 
