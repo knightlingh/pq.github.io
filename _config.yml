@@ -5,8 +5,8 @@ description: "Lin is where two creative twins share their projects, art and sill
 logo: 'assets/images/logo.png'
 favicon: 'assets/images/logo.png'
 baseurl: /
-google_analytics: 'UA-46278016-1'
-disqus: 'demowebsite'
+google_analytics: ''
+disqus: ''
 mailchimp-list: 'https://dev.us15.list-manage.com/subscribe/post?u=056ef2817df7de56170f860b2&amp;id=7b0f5d608a&amp;f_id=00e291e0f0'
 include: ["_pages"]
 permalink: /:title/
@@ -61,8 +61,8 @@ kramdown:
 
 # Adsense (change to "enabled" to activate, also your client id and ad slot. Create a new ad unit from your Adsense account to get the slot.)
 adsense: "disabled"
-adsense-data-ad-client: "ca-pub-3412143450191416"
-adsense-data-ad-slot: "1363087678"
+adsense-data-ad-client: ""
+adsense-data-ad-slot: ""
 
 # Lazy Images ("enabled" or "disabled")
 lazyimages: "disabled"
