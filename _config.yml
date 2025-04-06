@@ -16,7 +16,7 @@ authors:
   luca:
     name: Luca
     display_name: Luca
-    avatar: 'assets/images/luca.png'
+    avatar: 'assets/images/luca.webp'
     description: "Luca"
   oscar:
     name: Oscar
