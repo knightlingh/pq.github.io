@@ -21,12 +21,12 @@ authors:
   oscar:
     name: Oscar
     display_name: Oscar    
-    avatar: 'assets/images/oscar.png'
+    avatar: 'assets/images/oscar.webp'
     description: "Oscar"
   lins:
     name: Luca & Oscar
     display_name: Luca & Oscar    
-    avatar: 'assets/images/logo.png'
+    avatar: 'assets/images/logo.webp'
     description: "Team project"
 
 # Plugins
