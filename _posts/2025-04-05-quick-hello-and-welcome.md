@@ -20,8 +20,6 @@ This website is our little corner of the internet, where we’ll be sharing proj
 Why we made this site
 We believe that creating together is one of the most meaningful things families can do. It sparks imagination, builds confidence, and strengthens bonds. Our goal is to share what we do and hopefully inspire others—other kids, parents, teachers, or anyone with a curious heart—to build, make, and explore their own ideas too.
 
-Whether it's a cool science experiment, a fun weekend project, or a wild idea turned into reality, we hope you’ll find something here that makes you smile, think, or say, “Hey, we could try that!”
-
 Thanks for stopping by—and welcome to our journey of creativity, curiosity, and connection.
 
 With joy,
