@@ -3,7 +3,7 @@ layout: post
 title:  "Avocado"
 author: oscar
 categories: [ painting, art ]
-image: _painting/oscar/avocado.jpg
+image: assets/images/oscar/avocado.jpg
 ---
 Avocado
 
