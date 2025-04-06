@@ -16,12 +16,12 @@ authors:
   luca:
     name: Luca
     display_name: Luca
-    avatar: 'assets/images/avatar.png'
+    avatar: 'assets/images/luca.png'
     description: "Luca"
   oscar:
     name: Oscar
     display_name: Oscar    
-    avatar: 'assets/images/avatar.png'
+    avatar: 'assets/images/oscar.png'
     description: "Oscar"
   lins:
     name: Luca & Oscar
