@@ -24,10 +24,10 @@ authors:
     avatar: 'assets/images/oscar.webp'
     description: "Oscar"
   lins:
-    name: Luca & Oscar
-    display_name: Luca & Oscar    
+    name: The Lin Family
+    display_name: The Lin Family 
     avatar: 'assets/images/logo.webp'
-    description: "Team project"
+    description: "Family project"
 
 # Plugins
 plugins:
