@@ -4,8 +4,6 @@ title:  "This is The Lin Family"
 author: lins
 categories: [ family, intro ]
 image: assets/images/lin-family.webp
-featured: true
-hidden: true
 ---
 Whether it's a cool science experiment, a fun weekend project, or a wild idea turned into reality, we hope you’ll find something here that makes you smile, think, or say, “Hey, we could try that!”
 
