@@ -28,6 +28,16 @@ authors:
     display_name: The Lin Family 
     avatar: 'assets/images/logo.webp'
     description: "Family project"
+  wu:
+    name: Wu
+    display_name: Wu
+    avatar: 'assets/images/wu.webp'
+    description: "Wu"
+  twins:
+    name: Twins
+    display_name: Luca & Oscar
+    avatar: 'assets/images/twins.webp'
+    description: "Twins project"
 
 # Plugins
 plugins:
