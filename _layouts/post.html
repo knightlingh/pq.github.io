@@ -96,6 +96,7 @@ post_class: post-template
 
             <!-- Post Categories -->
             <div class="after-post-cats">
+                {% if page.categories %}
                 <ul class="tags mb-4">
                     {% assign sortedCategories = page.categories | sort %}
                     {% for category in sortedCategories %}
@@ -104,11 +105,13 @@ post_class: post-template
                     </li>
                     {% endfor %}
                 </ul>
+                {% endif %}
             </div>
             <!-- End Categories -->
 
             <!-- Post Tags -->
             <div class="after-post-tags">
+                {% if page.tags %}
                 <ul class="tags">
                     {% assign sortedTags = page.tags | sort %}
                     {% for tag in sortedTags %}
@@ -117,6 +120,7 @@ post_class: post-template
                     </li>
                     {% endfor %}
                 </ul>
+                {% endif %}
             </div>
             <!-- End Tags -->
 
