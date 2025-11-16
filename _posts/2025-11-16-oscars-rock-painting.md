@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "rock art"
+title:  "First rock art"
 author: oscar
 categories: [ trip, diy ]
 image: assets/images/oscar/rock-1.webp
