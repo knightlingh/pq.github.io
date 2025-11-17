@@ -1,12 +1,12 @@
 ---
 layout: post
-title:  "This is The Lin Family"
-author: linsdate: 2025-04-05
-
-categories: [ family, intro ]
+title: "This is The Lin Family"
+author: lins
+date: 2025-04-05
+categories: ["family", "intro"]
 image: assets/images/lin-family.webp
-
 ---
+
 Whether it's a cool science experiment, a fun weekend project, or a wild idea turned into reality, we hope you’ll find something here that makes you smile, think, or say, “Hey, we could try that!”
 
 ### 👋 Hello and Welcome!

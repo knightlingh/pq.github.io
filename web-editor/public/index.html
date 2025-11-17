@@ -13,49 +13,45 @@
   <div class="app">
     <aside class="sidebar">
       <div class="brand">
-        <h2>pq • Editor</h2>
-        <small>Local Jekyll manager</small>
+        <h2>✏️ Story Writer</h2>
+        <small>📚 Create & Share Stories</small>
       </div>
       <div class="sidebar-actions">
-        <button id="newBtn" class="btn primary">New</button>
+        <button id="newBtn" class="btn primary">✨ New Story</button>
       </div>
       <div class="list-wrap">
-        <h4>Posts</h4>
+        <h4>📖 My Stories</h4>
         <ul id="posts" class="post-list"></ul>
-      </div>
-      <div class="images-section">
-        <h4>Images</h4>
-        <div id="thumbs" class="thumbs-small"></div>
       </div>
     </aside>
 
     <main class="editor-area">
       <div class="meta-row">
         <div class="meta-field">
-          <label>Title</label>
-          <input id="title" placeholder="Post title" />
+          <label>📝 Story Title</label>
+          <input id="title" placeholder="Give your story a fun name!" />
           <div class="field-error" id="error-title"></div>
         </div>
         <div class="meta-field">
-          <label>Date</label>
+          <label>📅 When did you write it?</label>
           <input id="date" type="date" />
           <div class="field-error" id="error-date"></div>
         </div>
         <div class="meta-field">
-          <label>Author</label>
-          <input id="author" placeholder="Author name" />
+          <label>👤 Your Name</label>
+          <input id="author" placeholder="Your awesome name!" />
           <div class="field-error" id="error-author"></div>
         </div>
         <div class="meta-field">
-          <label>Categories</label>
+          <label>🏷️ Tags (Subjects)</label>
           <div style="display:flex;gap:6px;align-items:flex-start;position:relative;flex:1;">
             <div id="categoriesDropdown" class="custom-dropdown" style="flex:1;">
-              <div id="categoriesButton" class="dropdown-button">Select categories...</div>
+              <div id="categoriesButton" class="dropdown-button">Pick tags...</div>
               <div id="categoriesMenu" class="dropdown-menu" style="display:none;">
                 <div id="categoriesList" class="categories-list"></div>
-                <div style="border-top:1px solid #ddd;padding:6px;display:flex;gap:6px;">
-                  <input id="categoriesNewInput" placeholder="Add new category" style="flex:1;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:13px;" />
-                  <button id="categoriesNewBtn" class="btn" type="button" style="white-space:nowrap;">Add</button>
+                <div style="border-top:3px solid #4ecdc4;padding:8px;display:flex;gap:6px;">
+                  <input id="categoriesNewInput" placeholder="New tag" style="flex:1;padding:8px;border:2px solid #4ecdc4;border-radius:8px;font-size:13px;font-family:inherit;" />
+                  <button id="categoriesNewBtn" class="btn" type="button" style="white-space:nowrap;padding:6px 10px;">Add</button>
                 </div>
               </div>
             </div>
@@ -64,21 +60,21 @@
         </div>
       </div>
 
-      <div class="toolbar" role="toolbar" aria-label="Markdown formatting">
-        <button class="btn" data-action="h1">H1</button>
-        <button class="btn" data-action="bold"><strong>B</strong></button>
-        <button class="btn" data-action="italic"><em>I</em></button>
-        <button class="btn" data-action="link">Link</button>
-        <button class="btn" data-action="image">Image</button>
-        <button class="btn" data-action="code">Code</button>
-        <button class="btn" id="undoBtn">Undo</button>
-        <button class="btn" id="redoBtn">Redo</button>
-        <button class="btn" id="togglePreview">Toggle Preview</button>
+      <div class="toolbar" role="toolbar" aria-label="Story formatting">
+        <button class="btn" data-action="h1">📌 Title</button>
+        <button class="btn" data-action="bold"><strong>Bold</strong></button>
+        <button class="btn" data-action="italic"><em>Italic</em></button>
+        <button class="btn" data-action="link">🔗 Link</button>
+        <button class="btn" data-action="image">🖼️ Picture</button>
+        <button class="btn" data-action="code">💻 Code</button>
+        <button class="btn" id="undoBtn">↩️ Undo</button>
+        <button class="btn" id="redoBtn">↪️ Redo</button>
+        <button class="btn" id="togglePreview">👀 Preview</button>
         <div class="spacer"></div>
-        <button class="btn primary" id="saveBtn">Save</button>
-        <button class="btn" id="createBtn">Create</button>
-        <button class="btn danger" id="deleteBtn">Delete</button>
-        <button class="btn" id="renameBtn">Rename</button>
+        <button class="btn primary" id="saveBtn">💾 Save</button>
+        <button class="btn primary" id="createBtn">✨ Create</button>
+        <button class="btn danger" id="deleteBtn">🗑️ Delete</button>
+        <button class="btn" id="renameBtn">✏️ Rename</button>
       </div>
 
       <div class="split-area">
@@ -88,9 +84,9 @@
       </div>
 
       <div id="metaPreview" class="meta-preview">
-        <div>Filename preview: <code id="previewFilename">(none)</code></div>
-        <div>Image path: <code id="previewImagePath">(none)</code></div>
-        <div id="draftStatus" class="draft-status">Draft: <span id="draftTime">never</span> <button id="restoreDraftBtn" class="btn">Restore</button></div>
+        <div>📄 Filename: <code id="previewFilename">(none)</code></div>
+        <div>🖼️ Picture: <code id="previewImagePath">(none)</code></div>
+        <div id="draftStatus" class="draft-status">📝 Draft saved: <span id="draftTime">never</span> <button id="restoreDraftBtn" class="btn">Restore</button></div>
       </div>
 
       <!-- Inline status indicator -->
@@ -102,12 +98,12 @@
   <!-- Non-blocking modal for unsaved-changes confirmation -->
   <div id="confirmModal" class="modal" aria-hidden="true">
     <div class="modal-panel">
-      <h3>Unsaved changes</h3>
-      <p>You have unsaved changes. What would you like to do?</p>
+      <h3>⚠️ Hold on!</h3>
+      <p>You have changes that aren't saved yet. What do you want to do?</p>
       <div class="modal-actions">
-        <button id="modalSave" class="btn primary">Save and continue</button>
-        <button id="modalDiscard" class="btn">Discard changes</button>
-        <button id="modalCancel" class="btn">Cancel</button>
+        <button id="modalSave" class="btn primary">💾 Save & Continue</button>
+        <button id="modalDiscard" class="btn">🚫 Don't Save</button>
+        <button id="modalCancel" class="btn">🔄 Keep Editing</button>
       </div>
     </div>
   </div>

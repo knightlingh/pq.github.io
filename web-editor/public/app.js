@@ -7,7 +7,6 @@ const createBtn = document.getElementById('createBtn');
 const deleteBtn = document.getElementById('deleteBtn');
 const renameBtn = document.getElementById('renameBtn');
 const imageFolderSel = document.getElementById('imageFolder');
-const thumbs = document.getElementById('thumbs');
 const previewArea = document.getElementById('previewArea');
 const textarea = document.getElementById('content');
 const resizer = document.getElementById('resizer');
@@ -102,7 +101,7 @@ hiddenFile.addEventListener('change', async () => {
   fd.append('folder', folder);
   const res = await fetch('/api/upload', { method: 'POST', body: fd });
   const j = await res.json();
-  if(j.url){ previewImagePathEl.textContent = j.url; showStatus('Uploaded: ' + j.url, 'success'); await loadThumbnails(); renderPreview(); checkDirty(); } else showStatus('Upload failed', 'error');
+  if(j.url){ previewImagePathEl.textContent = j.url; showStatus('Uploaded: ' + j.url, 'success'); renderPreview(); checkDirty(); } else showStatus('Upload failed', 'error');
 });
 
 // toggle dropdown menu
@@ -205,7 +204,17 @@ async function loadPosts(){
     const li = document.createElement('li'); 
     const title = p.data.title || p.filename;
     const date = p.data.date ? new Date(p.data.date).toLocaleDateString() : '';
-    li.innerHTML = `<div class="post-title">${title}</div>${date ? `<div class="post-date">${date}</div>` : ''}`;
+    // Clean up image path: remove quotes, trim whitespace
+    let image = p.data.image ? String(p.data.image).replace(/^["']|["']$/g, '').trim() : '';
+    image = (image && image !== '(none)' && image !== '') ? image : null;
+    
+    // Create thumbnail if image exists
+    let thumbnailHtml = '';
+    if(image){
+      thumbnailHtml = `<img src="${image}" alt="${title}" class="post-thumbnail" />`;
+    }
+    
+    li.innerHTML = `<div class="post-info"><div class="post-title">${title}</div>${date ? `<div class="post-date">${date}</div>` : ''}</div>${thumbnailHtml}`;
     li.dataset.filename = p.filename;
     li.addEventListener('click', ()=> maybeNavigate(()=> loadPostWithCheck(p.filename)));
     if(current && current === p.filename) li.classList.add('active');
@@ -351,9 +360,7 @@ deleteBtn.addEventListener('click', async ()=>{ if(!current) return showStatus('
 renameBtn.addEventListener('click', async ()=>{ if(!current) return showStatus('Select a post to rename', 'error'); const newName = prompt('New filename (YYYY-MM-DD-title.md)', current); if(!newName) return; if(!filenameValidPrefix(newName)) return showStatus('New filename must start with YYYY-MM-DD-', 'error'); const res = await fetch('/api/rename', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ oldFilename: current, newFilename: newName }) }); const j = await res.json(); if(j.error) showStatus('Error: '+j.error, 'error'); else { showStatus('Renamed', 'success'); current=newName; await loadPosts(); updateActiveList(); } });
 
 // images
-async function loadImageFolders(){ try{ const res = await fetch('/api/image-folders'); const folders = await res.json(); imageFolderSel.innerHTML=''; folders.forEach(f=>{ const o = document.createElement('option'); o.value=f; o.textContent=f; imageFolderSel.appendChild(o); }); const opt = document.createElement('option'); opt.value='uploads'; opt.textContent='uploads (default)'; if(!folders.includes('uploads')) imageFolderSel.appendChild(opt); } catch(e){ console.warn(e); } }
-
-async function loadThumbnails(){ thumbs.innerHTML = ''; try{ const res = await fetch('/api/images'); const files = await res.json(); files.slice(0,50).forEach(f=>{ const img = document.createElement('img'); img.src = f.url; img.title = f.path; img.addEventListener('click', ()=>{ document.getElementById('previewImagePath').textContent = f.url; renderPreview(); checkDirty(); }); thumbs.appendChild(img); }); }catch(e){ console.warn(e); } }
+async function loadImageFolders(){ try{ if(!imageFolderSel) return; const res = await fetch('/api/image-folders'); const folders = await res.json(); imageFolderSel.innerHTML=''; folders.forEach(f=>{ const o = document.createElement('option'); o.value=f; o.textContent=f; imageFolderSel.appendChild(o); }); const opt = document.createElement('option'); opt.value='uploads'; opt.textContent='uploads (default)'; if(!folders.includes('uploads')) imageFolderSel.appendChild(opt); } catch(e){ console.warn(e); } }
 
 let originalState = null;
 let isDirty = false;
@@ -523,7 +530,7 @@ async function saveAs(filename){ const title = titleInput.value || ''; const dat
 }
 
 // capture initial state after initial loads
-loadPosts(); loadImageFolders(); loadThumbnails(); renderPreview(); captureState();
+loadPosts(); loadImageFolders(); renderPreview(); captureState();
 
 // before unload warn (non-blocking modal) - show basic browser message as fallback
 window.addEventListener('beforeunload', (e)=>{

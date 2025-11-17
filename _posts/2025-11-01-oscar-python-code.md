@@ -1,9 +1,9 @@
 ---
 layout: post
-title: "python code"
+title: "Python code"
 author: oscar
 date: 2025-11-01
-categories: [code,diy]
+categories: ["code", "diy"]
 image: 
 ---
 
