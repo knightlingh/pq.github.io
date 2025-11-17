@@ -1,9 +1,11 @@
 ---
 layout: post
 title:  "The DM guide"
-author: oscar
+author: oscardate: 2025-04-06
+
 categories: [ game, RPG, d&d ]
 image: assets/images/oscar/dm.webp
+
 ---
 I am a DM or a dungeon master, and here are some tips to make a fun campaign
 

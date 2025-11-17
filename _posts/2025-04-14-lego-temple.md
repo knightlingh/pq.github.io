@@ -1,9 +1,11 @@
 ---
 layout: post
 title:  "Temple"
-author: luca
+author: lucadate: 2025-04-14
+
 categories: [ lego, art ]
 image: assets/images/luca/lego-temple.webp
+
 ---
 Lego Temple
 
