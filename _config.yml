@@ -4,7 +4,7 @@ title: "Lin"
 description: "Lin is where two creative twins share their projects, art and silly stuff, inspiring others to build, create, and have fun together."
 logo: 'assets/images/logo.webp'
 favicon: 'assets/images/logo.webp'
-baseurl: /
+baseurl: ""
 google_analytics: ''
 disqus: ''
 mailchimp-list: 'https://dev.us15.list-manage.com/subscribe/post?u=056ef2817df7de56170f860b2&amp;id=7b0f5d608a&amp;f_id=00e291e0f0'
