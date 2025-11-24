@@ -185,6 +185,19 @@
   align-items: center;
   z-index: 6;
 }
+.wordle-timer {
+  margin-left: auto;
+  margin-right: 8px;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid #243549;
+  border-radius: 10px;
+  background: rgba(18, 24, 33, 0.9);
+  color: #cfe6ff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  min-width: 64px;
+  text-align: center;
+}
 .wordle-overlay__close {
   width: 34px;
   height: 34px;
@@ -357,6 +370,7 @@
   .wordle-play-sub { display: none; }
   .wordle-play-header h2 { margin: 0; }
   .wordle-play-brand { flex-direction: row; align-items: center; gap: 0.5rem; }
+  .wordle-timer { order: 2; margin-left: 0; }
   .wordle-stage { padding-bottom: 0.15rem; gap: 0.5rem; min-height: 0; }
   .wordle-board { width: min(92vw, 380px); gap: 6px; }
   .wordle-row { gap: 6px; }

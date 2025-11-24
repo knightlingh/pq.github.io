@@ -11,7 +11,10 @@ window.initWordle = function initWordle(root) {
   const keyboardEl = scope.querySelector('#wordle-keyboard');
   const messageEl = scope.querySelector('#wordle-message');
   const refreshBtn = scope.querySelector('#wordle-refresh');
+  const timerEl = scope.querySelector('#wordle-timer');
   let messageTimer = null;
+  let timerId = null;
+  let startTime = null;
 
   if (!boardEl || !keyboardEl || !messageEl) {
     return;
@@ -136,6 +139,7 @@ window.initWordle = function initWordle(root) {
   buildBoard();
   buildKeyboard();
   setMessage('Type or tap to guess the 5-letter word.');
+  startTimer();
 
   if (openBtn && overlay) {
     openBtn.addEventListener('click', () => {
@@ -266,12 +270,14 @@ window.initWordle = function initWordle(root) {
     if (guess === secret) {
       finished = true;
       setMessage(`You solved it in ${currentRow + 1}/6!`, 'win');
+      stopTimer();
       return;
     }
 
     if (currentRow === rows - 1) {
       finished = true;
       setMessage(`Out of tries. The word was ${secret}.`, 'lose');
+      stopTimer();
       return;
     }
 
@@ -383,9 +389,32 @@ window.initWordle = function initWordle(root) {
     });
 
     setMessage('New word loaded. Start guessing!');
+    startTimer();
+  }
+
+  function startTimer() {
+    stopTimer();
+    startTime = Date.now();
+    if (!timerEl) return;
+    timerEl.textContent = '00:00';
+    timerId = setInterval(() => {
+      const elapsedMs = Date.now() - startTime;
+      const totalSeconds = Math.floor(elapsedMs / 1000);
+      const mins = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+      const secs = String(totalSeconds % 60).padStart(2, '0');
+      timerEl.textContent = `${mins}:${secs}`;
+    }, 1000);
+  }
+
+  function stopTimer() {
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
   }
 
   function closeOverlay() {
+    stopTimer();
     overlay.classList.remove('active');
     document.body.classList.remove('wordle-no-scroll');
     overlay.setAttribute('aria-hidden', 'true');
