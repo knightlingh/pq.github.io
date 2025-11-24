@@ -18,6 +18,7 @@ window.initWordle = function initWordle(root) {
   let startTime = null;
   let elapsedMs = 0;
   let paused = true;
+  const CHEAT_CODE = 'OOOOO';
 
   if (!boardEl || !keyboardEl || !messageEl) {
     return;
@@ -123,7 +124,7 @@ window.initWordle = function initWordle(root) {
     'LEMON','LEMUR','LEPER','LEVEL','LEVER','LIBEL','LIDAR','LIEGE','LIFER','LIFTY',
     'LIGHT','LIKEN','LILAC','LIMBO','LIMIT','LINEN','LINER','LINGO','LIONS','LIPID',
     'LITER','LIVID','LLAMA','LOAMY','LOCAL','LOCUS','LODGE','LOFTY','LOGIC','LOGIN',
-    'LOLLY','LONGS','PANDA','OTTER','TIGER','SHARK','ZEBRA','SMILE','PEACH'
+    'LOLLY','LONGS','PANDA','OTTER','TIGER','SHARK','ZEBRA','SMILE','PEACH','ZESTY'
   ];
   const answerPools = { default: masterWords };
   const validWordSet = new Set(masterWords);
@@ -269,6 +270,10 @@ window.initWordle = function initWordle(root) {
     }
 
     const guess = grid[currentRow].join('');
+    if (guess === CHEAT_CODE) {
+      handleCheat();
+      return;
+    }
     if (!validWordSet.has(guess)) {
       setMessage('Not in the word list.', 'warn');
       return;
@@ -294,6 +299,19 @@ window.initWordle = function initWordle(root) {
     currentRow += 1;
     currentCol = 0;
     setMessage('Nice try. Keep going.');
+  }
+
+  function handleCheat() {
+    finished = true;
+    const letters = secret.split('');
+    grid[currentRow] = letters;
+    letters.forEach((letter, idx) => {
+      paintCell(currentRow, idx, letter);
+    });
+    const results = Array(cols).fill('correct');
+    revealRow(currentRow, results, () => updateKeyboard(secret, results));
+    setMessage(`Secret revealed: ${secret}.`, 'win');
+    stopTimer(true);
   }
 
   function scoreGuess(guess, target) {
