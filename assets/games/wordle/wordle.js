@@ -309,9 +309,44 @@ window.initWordle = function initWordle(root) {
       paintCell(currentRow, idx, letter);
     });
     const results = Array(cols).fill('correct');
-    revealRow(currentRow, results, () => updateKeyboard(secret, results));
-    setMessage(`Secret revealed: ${secret}.`, 'win');
+    updateKeyboard(secret, results);
+    revealRow(currentRow, results, () => {
+      // Make sure the revealed row still shows the secret letters after animation.
+      letters.forEach((letter, idx) => paintCell(currentRow, idx, letter));
+      updateKeyboard(secret, results);
+    });
+    currentCol = cols;
+    setMessage(`Sorry! Secret revealed: ${secret}.`, 'win');
     stopTimer(true);
+    triggerCheatAnimation();
+    playCheatSound();
+  }
+
+  function triggerCheatAnimation() {
+    const container = scope.querySelector('.wordle-overlay__inner');
+    if (!container) return;
+    container.classList.add('wordle-cheat');
+    setTimeout(() => container.classList.remove('wordle-cheat'), 900);
+  }
+
+  function playCheatSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(420, now);
+      osc.frequency.linearRampToValueAtTime(660, now + 0.15);
+      osc.frequency.linearRampToValueAtTime(330, now + 0.32);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.6);
+    } catch (err) {
+      console.warn('Cheat sound failed', err);
+    }
   }
 
   function scoreGuess(guess, target) {
