@@ -1,0 +1,60 @@
+<div class="wordle-intro wordle-post">
+  <div class="wordle-intro__header">
+    <p class="wordle-intro__lede">Guess the hidden five-letter word in six tries.</p>
+    <div class="wordle-intro__actions">
+      <button type="button" class="wordle-intro__cta" id="wordle-open">Play Wordle</button>
+    </div>
+  </div>
+
+  <div class="wordle-intro__panels">
+    <div class="wordle-intro__panel">
+      <h3>How to play</h3>
+      <p>Type a five-letter word and press Enter to submit. Six tries.</p>
+      <div class="wordle-preview">
+        <div class="wordle-preview__row">
+          <span class="tile tile--correct">B</span>
+          <span class="tile tile--unknown">R</span>
+          <span class="tile tile--unknown">A</span>
+          <span class="tile tile--unknown">V</span>
+          <span class="tile tile--unknown">E</span>
+        </div>
+        <div class="wordle-preview__row">
+          <span class="tile tile--unknown">S</span>
+          <span class="tile tile--unknown">C</span>
+          <span class="tile tile--unknown">O</span>
+          <span class="tile tile--present">U</span>
+          <span class="tile tile--unknown">T</span>
+        </div>
+      </div>
+      <ul class="wordle-legend">
+        <li><span class="legend-swatch legend-swatch--green" aria-hidden="true"></span><span>Correct letter, correct spot.</span></li>
+        <li><span class="legend-swatch legend-swatch--gold" aria-hidden="true"></span><span>Correct letter, wrong spot.</span></li>
+        <li><span class="legend-swatch legend-swatch--gray" aria-hidden="true"></span><span>Not in the word.</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="wordle-overlay" id="wordle-overlay" aria-hidden="true">
+  <div class="wordle-overlay__inner">
+    <header class="wordle-play-header">
+      <div class="wordle-play-brand">
+        <div>
+          <div class="wordle-logo wordle-logo--play">
+            <img src="/assets/images/games/Wordle.webp" alt="Wordle logo" loading="lazy">
+          </div>
+        </div>
+      </div>
+      <div class="wordle-overlay__actions">
+        <button class="wordle-refresh" id="wordle-refresh" type="button" aria-label="New game">&#10227;</button>
+        <button class="wordle-overlay__close" id="wordle-close" aria-label="Close Wordle">X</button>
+      </div>
+    </header>
+
+    <main class="wordle-stage" aria-live="polite">
+      <div class="wordle-board" id="wordle-board" aria-label="Wordle board" role="grid"></div>
+      <p class="wordle-status" id="wordle-message">Type or tap to guess the 5-letter word.</p>
+      <div class="wordle-keyboard" id="wordle-keyboard" aria-label="On-screen keyboard"></div>
+    </main>
+  </div>
+</div>
