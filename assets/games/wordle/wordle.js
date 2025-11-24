@@ -12,9 +12,12 @@ window.initWordle = function initWordle(root) {
   const messageEl = scope.querySelector('#wordle-message');
   const refreshBtn = scope.querySelector('#wordle-refresh');
   const timerEl = scope.querySelector('#wordle-timer');
+  const shareBtn = scope.querySelector('#wordle-share');
   let messageTimer = null;
   let timerId = null;
   let startTime = null;
+  let elapsedMs = 0;
+  let paused = true;
 
   if (!boardEl || !keyboardEl || !messageEl) {
     return;
@@ -139,7 +142,7 @@ window.initWordle = function initWordle(root) {
   buildBoard();
   buildKeyboard();
   setMessage('Type or tap to guess the 5-letter word.');
-  startTimer();
+  updateTimerLabel();
 
   if (openBtn && overlay) {
     openBtn.addEventListener('click', () => {
@@ -155,6 +158,13 @@ window.initWordle = function initWordle(root) {
   window.addEventListener('keydown', onKeydown);
   if (refreshBtn) {
     refreshBtn.addEventListener('click', resetGame);
+  }
+  if (timerEl) {
+    timerEl.addEventListener('click', toggleTimer);
+  }
+  if (shareBtn) {
+    shareBtn.addEventListener('click', handleShare);
+    shareBtn.hidden = true;
   }
 
   function createGrid() {
@@ -270,14 +280,14 @@ window.initWordle = function initWordle(root) {
     if (guess === secret) {
       finished = true;
       setMessage(`You solved it in ${currentRow + 1}/6!`, 'win');
-      stopTimer();
+      stopTimer(true);
       return;
     }
 
     if (currentRow === rows - 1) {
       finished = true;
       setMessage(`Out of tries. The word was ${secret}.`, 'lose');
-      stopTimer();
+      stopTimer(true);
       return;
     }
 
@@ -389,34 +399,95 @@ window.initWordle = function initWordle(root) {
     });
 
     setMessage('New word loaded. Start guessing!');
-    startTimer();
+    resetTimerDisplay();
+    if (shareBtn) shareBtn.hidden = true;
   }
 
   function startTimer() {
     stopTimer();
     startTime = Date.now();
-    if (!timerEl) return;
-    timerEl.textContent = '00:00';
-    timerId = setInterval(() => {
-      const elapsedMs = Date.now() - startTime;
-      const totalSeconds = Math.floor(elapsedMs / 1000);
-      const mins = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
-      const secs = String(totalSeconds % 60).padStart(2, '0');
-      timerEl.textContent = `${mins}:${secs}`;
-    }, 1000);
+    paused = false;
+    updateTimerStateClass();
+    tickTimer();
+    timerId = setInterval(tickTimer, 1000);
   }
 
-  function stopTimer() {
+  function stopTimer(showShare = false) {
     if (timerId) {
       clearInterval(timerId);
       timerId = null;
     }
+    if (!paused && startTime) {
+      elapsedMs += Date.now() - startTime;
+    }
+    paused = true;
+    updateTimerStateClass();
+    updateTimerLabel();
+    if (shareBtn) {
+      shareBtn.hidden = !showShare;
+    }
   }
 
   function closeOverlay() {
-    stopTimer();
+    stopTimer(false);
     overlay.classList.remove('active');
     document.body.classList.remove('wordle-no-scroll');
     overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  function toggleTimer() {
+    if (paused) {
+      startTimer();
+    } else {
+      stopTimer(false);
+    }
+  }
+
+  function tickTimer() {
+    if (!timerEl) return;
+    const total = elapsedMs + (paused ? 0 : Date.now() - startTime);
+    const totalSeconds = Math.floor(total / 1000);
+    const mins = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+    const secs = String(totalSeconds % 60).padStart(2, '0');
+    timerEl.textContent = `${mins}:${secs}`;
+  }
+
+  function resetTimerDisplay() {
+    elapsedMs = 0;
+    paused = true;
+    startTime = null;
+    updateTimerStateClass();
+    updateTimerLabel();
+  }
+
+  function updateTimerLabel() {
+    tickTimer();
+  }
+
+  function updateTimerStateClass() {
+    if (!timerEl) return;
+    timerEl.classList.toggle('is-running', !paused);
+    timerEl.classList.toggle('is-paused', paused);
+  }
+
+  async function handleShare() {
+    if (!shareBtn) return;
+    const target = scope.querySelector('.wordle-overlay__inner');
+    if (!target) return;
+    if (!window.html2canvas) {
+      setMessage('Share unavailable (html2canvas missing).', 'warn');
+      return;
+    }
+    try {
+      const canvas = await window.html2canvas(target, { scale: 2, useCORS: true, backgroundColor: '#0f0f10' });
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+      if (!blob) throw new Error('No blob from canvas');
+      if (!navigator.clipboard || !window.ClipboardItem) throw new Error('Clipboard image not supported');
+      await navigator.clipboard.write([new ClipboardItem({ 'image/jpeg': blob })]);
+      setMessage('Copied snapshot to clipboard!', 'info');
+    } catch (err) {
+      console.error('Share failed', err);
+      setMessage('Share failed. Clipboard/image support missing.', 'warn');
+    }
   }
 };

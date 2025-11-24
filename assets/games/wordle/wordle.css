@@ -202,6 +202,8 @@
   justify-content: center;
   text-align: center;
 }
+.wordle-timer.is-running { background: rgba(20, 80, 60, 0.85); border-color: #2b6e53; color: #e8fff3; }
+.wordle-timer.is-paused { background: rgba(55, 60, 75, 0.9); border-color: #2f3848; color: #cfe6ff; }
 .wordle-overlay__close {
   width: 34px;
   height: 34px;
