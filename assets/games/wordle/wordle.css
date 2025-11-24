@@ -312,7 +312,11 @@
   50% { transform: rotate(180deg) scale(1.03); opacity: 1; }
   100% { transform: rotate(360deg) scale(1); opacity: 1; }
 }
-.wordle-overlay__inner.wordle-cheat { animation: wordle-cheat-shake 0.9s ease; }
+.wordle-overlay__inner.wordle-cheat,
+.wordle-stage.wordle-cheat {
+  animation: wordle-cheat-shake 0.9s ease both;
+  will-change: transform;
+}
 @keyframes wordle-cheat-shake {
   0% { transform: translateY(0) rotate(0deg) scale(1); }
   20% { transform: translateY(-6px) rotate(-2deg) scale(1.01); }

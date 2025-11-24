@@ -13,12 +13,14 @@ window.initWordle = function initWordle(root) {
   const refreshBtn = scope.querySelector('#wordle-refresh');
   const timerEl = scope.querySelector('#wordle-timer');
   const shareBtn = scope.querySelector('#wordle-share');
+  const stageEl = scope.querySelector('.wordle-stage');
   let messageTimer = null;
   let timerId = null;
   let startTime = null;
   let elapsedMs = 0;
   let paused = true;
   const CHEAT_CODE = 'OOOOO';
+  let audioCtx = null;
 
   if (!boardEl || !keyboardEl || !messageEl) {
     return;
@@ -325,25 +327,47 @@ window.initWordle = function initWordle(root) {
   function triggerCheatAnimation() {
     const container = scope.querySelector('.wordle-overlay__inner');
     if (!container) return;
+    container.classList.remove('wordle-cheat');
+    void container.offsetWidth;
     container.classList.add('wordle-cheat');
-    setTimeout(() => container.classList.remove('wordle-cheat'), 900);
+    if (stageEl) {
+      stageEl.classList.remove('wordle-cheat');
+      void stageEl.offsetWidth;
+      stageEl.classList.add('wordle-cheat');
+    }
+    setTimeout(() => {
+      container.classList.remove('wordle-cheat');
+      if (stageEl) stageEl.classList.remove('wordle-cheat');
+    }, 950);
   }
 
   function playCheatSound() {
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const now = ctx.currentTime;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(420, now);
-      osc.frequency.linearRampToValueAtTime(660, now + 0.15);
-      osc.frequency.linearRampToValueAtTime(330, now + 0.32);
-      gain.gain.setValueAtTime(0.18, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.6);
+      const AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtor) return;
+      if (!audioCtx) {
+        audioCtx = new AudioCtor();
+      }
+      const ctx = audioCtx;
+      const playTone = () => {
+        const now = ctx.currentTime + 0.01;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(420, now);
+        osc.frequency.linearRampToValueAtTime(660, now + 0.15);
+        osc.frequency.linearRampToValueAtTime(330, now + 0.32);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.6);
+      };
+      if (ctx.state === 'suspended') {
+        ctx.resume().then(playTone).catch(() => {});
+      } else {
+        playTone();
+      }
     } catch (err) {
       console.warn('Cheat sound failed', err);
     }
