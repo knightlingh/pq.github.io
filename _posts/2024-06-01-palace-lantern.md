@@ -4,7 +4,7 @@ title: "Palace lantern"
 author: oscar
 date: 2024-06-01
 categories: ["painting"]
-image: /assets/images/uploads/1764200143022-Oscar-Unknow.webp
+image: assets/images/uploads/1764200143022-Oscar-Unknow.webp
 ---
 
 palace lantern
