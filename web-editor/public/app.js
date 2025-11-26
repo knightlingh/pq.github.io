@@ -81,8 +81,9 @@ function validateMetadata(title, date, author, categories, image){
     errors.push('Categories must be an array');
   }
   
-  // validate image path if provided (basic check)
-  if(image && image !== '(none)' && !image.startsWith('assets/')){
+  // validate image path if provided (basic check, allow optional leading slash)
+  const normalizedImage = image ? image.replace(/^\//, '') : '';
+  if(normalizedImage && normalizedImage !== '(none)' && !normalizedImage.startsWith('assets/')){
     errors.push('Image path should start with "assets/"');
   }
   
