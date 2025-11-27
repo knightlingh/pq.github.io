@@ -7,7 +7,8 @@ title: Home
 
 {% assign posts_with_images = site.posts | where_exp: "p","p.image" | sort: "date" | reverse %}
 {% assign recent_posts = posts_with_images | slice: 0,8 %}
-{% assign bonus_old = posts_with_images | slice: 8,2 %}
+{% assign older_pool = posts_with_images | slice: 8, 50 %}
+{% assign bonus_old = older_pool | sample: 2 %}
 {% assign slider_posts = recent_posts | concat: bonus_old %}
 
 <section class="hero-slider">
@@ -17,7 +18,7 @@ title: Home
 
   <div class="hero-slider__viewport">
     <div class="hero-slider__track">
-      {% for post in slider_posts limit:8 %}
+      {% for post in slider_posts %}
       <article class="hero-slide{% if forloop.first %} is-active{% endif %}">
         <a class="hero-slide__link" href="{{ post.url | relative_url }}">
           <div class="hero-slide__image" style="background-image:url('{{ post.image | relative_url }}');"></div>
@@ -69,6 +70,8 @@ title: Home
   let slidesPerView = mqWide.matches ? 2 : 1;
   let index = 0;
   let timer = null;
+  let touchStartX = null;
+  let touchDeltaX = 0;
 
   const getGap = () => parseFloat(getComputedStyle(track).columnGap || '0') || 0;
 
@@ -94,6 +97,29 @@ title: Home
   track.addEventListener('mouseenter', stop);
   track.addEventListener('mouseleave', start);
   mqWide.addEventListener('change', handleResize);
+
+  // touch swipe support for mobile
+  track.addEventListener('touchstart', (e) => {
+    if (!e.touches || !e.touches.length) return;
+    touchStartX = e.touches[0].clientX;
+    touchDeltaX = 0;
+    stop();
+  }, { passive: true });
+
+  track.addEventListener('touchmove', (e) => {
+    if (touchStartX === null || !e.touches || !e.touches.length) return;
+    touchDeltaX = e.touches[0].clientX - touchStartX;
+  }, { passive: true });
+
+  track.addEventListener('touchend', () => {
+    if (touchStartX === null) return;
+    const threshold = 40;
+    if (touchDeltaX > threshold) { prev(); }
+    else if (touchDeltaX < -threshold) { next(); }
+    touchStartX = null;
+    touchDeltaX = 0;
+    start();
+  });
 
   update();
   start();
