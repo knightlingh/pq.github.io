@@ -5,26 +5,100 @@ title: Home
 
 {% if page.url == "/" %}
 
-<!-- Featured
-================================================== -->
-<section class="featured-posts">
-    <div class="section-title">
-        <h2><span>Featured</span></h2>
+{% assign posts_with_images = site.posts | where_exp: "p","p.image" | sort: "date" | reverse %}
+{% assign recent_posts = posts_with_images | slice: 0,8 %}
+{% assign bonus_old = posts_with_images | slice: 8,2 %}
+{% assign slider_posts = recent_posts | concat: bonus_old %}
+
+<section class="hero-slider">
+  <div class="section-title">
+    <h2><span>Latest Highlights</span></h2>
+  </div>
+
+  <div class="hero-slider__viewport">
+    <div class="hero-slider__track">
+      {% for post in slider_posts limit:8 %}
+      <article class="hero-slide{% if forloop.first %} is-active{% endif %}">
+        <a class="hero-slide__link" href="{{ post.url | relative_url }}">
+          <div class="hero-slide__image" style="background-image:url('{{ post.image | relative_url }}');"></div>
+          <div class="hero-slide__overlay">
+            <p class="hero-slide__meta">{{ post.date | date: "%B %d, %Y" }}</p>
+            <h3 class="hero-slide__title">{{ post.title }}</h3>
+          </div>
+        </a>
+      </article>
+      {% endfor %}
     </div>
-    <div class="row">
 
-    {% for post in site.posts %}
-
-        {% if post.featured == true %}
-
-            {% include featuredbox.html %}
-
-        {% endif %}
-
-    {% endfor %}
-
-    </div>
+    <button class="hero-slider__control prev" type="button" aria-label="Previous slide">&#10094;</button>
+    <button class="hero-slider__control next" type="button" aria-label="Next slide">&#10095;</button>
+  </div>
 </section>
+
+<style>
+.hero-slider { margin-bottom: 2rem; position: relative; }
+.hero-slider__viewport { position: relative; overflow: hidden; border-radius: 14px; background: transparent; }
+.hero-slider__track { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; transition: transform 0.6s ease; background: transparent; column-gap: 0; }
+.hero-slide { position: relative; min-height: 320px; border-radius: 12px; overflow: hidden; }
+.hero-slide__link { display: block; height: 100%; color: inherit; text-decoration: none; border: 1px solid transparent; border-radius: 12px; background: transparent; }
+.hero-slide__image { height: 100%; background-size: contain; background-repeat: no-repeat; background-position: center; filter: brightness(0.9); background-color: #0f172a; }
+.hero-slide__overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 1.2rem; }
+.hero-slide__meta { margin: 0 0 0.25rem; color: #d9e2ec; letter-spacing: 0.04em; font-weight: 600; }
+.hero-slide__title { margin: 0; color: #f8fbff; font-size: 1.6rem; line-height: 1.2; }
+.hero-slider__control { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(15,23,42,0.7); color: #fff; border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; }
+.hero-slider__control.prev { left: 10px; }
+.hero-slider__control.next { right: 10px; }
+.hero-slider__control:hover { background: rgba(15,23,42,0.9); }
+@media (max-width: 640px) {
+  .hero-slide__title { font-size: 1.3rem; }
+  .hero-slide__overlay { padding: 1rem; }
+}
+@media (min-width: 900px) {
+  .hero-slider__track { grid-auto-columns: calc(50% - 8px); column-gap: 16px; background: transparent; }
+  .hero-slide__title { font-size: 1.4rem; }
+}
+</style>
+
+<script>
+(function() {
+  const track = document.querySelector('.hero-slider__track');
+  const slides = Array.from(document.querySelectorAll('.hero-slide'));
+  if (!track || slides.length === 0) return;
+
+  const mqWide = window.matchMedia('(min-width: 900px)');
+  let slidesPerView = mqWide.matches ? 2 : 1;
+  let index = 0;
+  let timer = null;
+
+  const getGap = () => parseFloat(getComputedStyle(track).columnGap || '0') || 0;
+
+  const update = () => {
+    const slideWidth = slides[0].getBoundingClientRect().width + getGap();
+    track.style.transform = `translateX(-${index * slideWidth}px)`;
+    slides.forEach((s, i) => s.classList.toggle('is-active', i === index));
+  };
+
+  const next = () => { index = (index + slidesPerView) % slides.length; update(); };
+  const prev = () => { index = (index - slidesPerView + slides.length) % slides.length; update(); };
+
+  const start = () => { stop(); timer = setInterval(next, 5000); };
+  const stop = () => { if (timer) clearInterval(timer); };
+
+  const handleResize = () => {
+    slidesPerView = mqWide.matches ? 2 : 1;
+    update();
+  };
+
+  document.querySelector('.hero-slider__control.next')?.addEventListener('click', () => { next(); start(); });
+  document.querySelector('.hero-slider__control.prev')?.addEventListener('click', () => { prev(); start(); });
+  track.addEventListener('mouseenter', stop);
+  track.addEventListener('mouseleave', start);
+  mqWide.addEventListener('change', handleResize);
+
+  update();
+  start();
+})();
+</script>
 
 {% endif %}
 
