@@ -39,7 +39,8 @@
         </div>
         <div class="meta-field">
           <label>👤 Your Name</label>
-          <input id="author" placeholder="Your awesome name!" />
+          <input id="author" placeholder="Your awesome name!" list="authorOptions" />
+          <datalist id="authorOptions"></datalist>
           <div class="field-error" id="error-author"></div>
         </div>
         <div class="meta-field">
@@ -72,7 +73,7 @@
         <button class="btn" id="togglePreview">👀 Preview</button>
         <div class="spacer"></div>
         <button class="btn primary" id="saveBtn">💾 Save</button>
-        <button class="btn primary" id="createBtn">✨ Create</button>
+
         <button class="btn danger" id="deleteBtn">🗑️ Delete</button>
         <button class="btn" id="renameBtn">✏️ Rename</button>
       </div>
@@ -112,3 +113,4 @@
   <script src="/app.js"></script>
 </body>
 </html>
+

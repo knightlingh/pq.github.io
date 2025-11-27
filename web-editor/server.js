@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require('fs').promises;
+const fssync = require('fs');
 const path = require('path');
 const multer = require('multer');
 const matter = require('gray-matter');
@@ -22,24 +23,87 @@ async function ensureDirs() {
 
 ensureDirs();
 
+function sanitizeFolder(folder) {
+  if (!folder) return 'uploads';
+  if (folder.includes('..')) return 'uploads';
+  return folder
+    .split(/[\\/]+/)
+    .filter(Boolean)
+    .map(p => p.replace(/[^a-zA-Z0-9._-]/g, '_'))
+    .join(path.sep);
+}
+
+function sanitizeFilename(name) {
+  return String(name || 'upload').replace(/[^a-zA-Z0-9.\-_]/g, '_');
+}
+
+function slugifySegment(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+function buildImageFilename(req, originalname) {
+  // honor client-provided filename when given
+  let provided = req.body && req.body.name ? String(req.body.name) : '';
+  provided = provided ? path.basename(provided) : '';
+  if (provided) {
+    const clean = sanitizeFilename(provided);
+    const ext = path.extname(clean) || path.extname(originalname || '') || '.png';
+    const stem = clean.replace(/\.[^.]+$/, '') || 'upload';
+    return `${stem}${ext}`;
+  }
+  // fallback to original name with sanitization + temp suffix
+  const base = sanitizeFilename(path.basename(originalname || 'upload'));
+  const extFallback = path.extname(base) || '.png';
+  const stem = base.replace(/\.[^.]+$/, '') || 'upload';
+  const tempSuffix = `tmp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}`;
+  return `${stem}-${tempSuffix}${extFallback}`;
+}
+
+function computeDestination(req) {
+  let folder = (req.body && req.body.folder) ? String(req.body.folder) : 'uploads';
+  folder = sanitizeFolder(folder || 'uploads');
+  const dest = path.join(IMAGES_BASE, folder);
+  // ensure directory exists synchronously so both multer filters and storage can use it
+  fssync.mkdirSync(dest, { recursive: true });
+  req.uploadDest = dest;
+  return dest;
+}
+
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {
     try {
-      // allow target folder via form field 'folder' (subfolder under assets/images)
-      let folder = (req.body && req.body.folder) ? String(req.body.folder) : 'uploads';
-      // sanitize folder name (no traversal, only simple names or nested simple paths)
-      if (folder.includes('..')) folder = 'uploads';
-      folder = folder.split(/[\\/]+/).filter(Boolean).map(p => p.replace(/[^a-zA-Z0-9._-]/g, '_')).join(path.sep);
-      const dest = path.join(IMAGES_BASE, folder);
-      await fs.mkdir(dest, { recursive: true });
+      const dest = computeDestination(req);
       cb(null, dest);
     } catch (err) {
       cb(err);
     }
   },
-  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_'))
+  filename: (req, file, cb) => {
+    const safeName = buildImageFilename(req, file.originalname);
+    cb(null, safeName);
+  }
 });
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    try {
+      const dest = computeDestination(req);
+      const safeName = buildImageFilename(req, file.originalname);
+      const target = path.join(dest, safeName);
+      if (fssync.existsSync(target)) {
+        // already exists; remember its URL and skip saving
+        req.duplicateUrl = '/' + path.relative(ROOT, target).replace(/\\/g, '/');
+        return cb(null, false);
+      }
+      return cb(null, true);
+    } catch (err) {
+      return cb(err);
+    }
+  }
+});
 
 // Serve frontend
 app.use('/', express.static(path.join(__dirname, 'public')));
@@ -80,7 +144,7 @@ app.get('/api/posts/:filename', async (req, res) => {
 
 app.post('/api/posts', async (req, res) => {
   try {
-    const { filename, content } = req.body;
+    const { filename, content, imageRename } = req.body;
     if (!filename || !content) return res.status(400).json({ error: 'filename and content required' });
     const p = safePostPath(filename);
     // if exists, return conflict
@@ -89,6 +153,9 @@ app.post('/api/posts', async (req, res) => {
       return res.status(409).json({ error: 'file exists' });
     } catch (e) {
       // not exists -> ok
+    }
+    if (imageRename && imageRename.from && imageRename.to) {
+      await handleImageRename(imageRename.from, imageRename.to);
     }
     await fs.writeFile(p, content, 'utf8');
     res.json({ ok: true, filename });
@@ -100,9 +167,12 @@ app.post('/api/posts', async (req, res) => {
 app.put('/api/posts/:filename', async (req, res) => {
   try {
     const filename = req.params.filename;
-    const { content } = req.body;
+    const { content, imageRename } = req.body;
     if (!content) return res.status(400).json({ error: 'content required' });
     const p = safePostPath(filename);
+    if (imageRename && imageRename.from && imageRename.to) {
+      await handleImageRename(imageRename.from, imageRename.to);
+    }
     await fs.writeFile(p, content, 'utf8');
     res.json({ ok: true, filename });
   } catch (err) {
@@ -138,10 +208,52 @@ app.post('/api/rename', async (req, res) => {
 
 app.post('/api/upload', upload.single('image'), (req, res) => {
   try {
+    // multer sets req.file when saved; if fileFilter skipped due to duplicate, provide existing URL
+    if (req.duplicateUrl) {
+      return res.json({ url: req.duplicateUrl, duplicate: true });
+    }
     if (!req.file) return res.status(400).json({ error: 'no file' });
     const rel = path.relative(ROOT, req.file.path).replace(/\\/g, '/');
     // return URL path that the server serves
-    res.json({ url: '/' + rel });
+    res.json({ url: '/' + rel, duplicate: false });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
+function assertWithinUploads(p) {
+  const full = path.resolve(ROOT, p.replace(/^\//, ''));
+  if (!full.startsWith(path.resolve(UPLOADS_DIR))) {
+    throw new Error('path outside uploads');
+  }
+  return full;
+}
+
+async function handleImageRename(from, to) {
+  const fromFull = assertWithinUploads(from);
+  const toFull = assertWithinUploads(to);
+  const toDir = path.dirname(toFull);
+  await fs.mkdir(toDir, { recursive: true });
+  // if target exists, reuse it
+  try {
+    await fs.access(toFull);
+    if (fromFull !== toFull) {
+      try { await fs.unlink(fromFull); } catch (e) { /* ignore */ }
+    }
+    return '/' + path.relative(ROOT, toFull).replace(/\\/g, '/');
+  } catch (e) {
+    // target missing -> move
+  }
+  await fs.rename(fromFull, toFull);
+  return '/' + path.relative(ROOT, toFull).replace(/\\/g, '/');
+}
+
+app.post('/api/rename-image', async (req, res) => {
+  try {
+    const { from, to } = req.body || {};
+    if (!from || !to) return res.status(400).json({ error: 'from and to required' });
+    const pathResp = await handleImageRename(from, to);
+    res.json({ ok: true, path: pathResp });
   } catch (err) {
     res.status(500).json({ error: String(err) });
   }

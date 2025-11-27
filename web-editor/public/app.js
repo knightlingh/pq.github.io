@@ -3,7 +3,6 @@ async function qs(id){return document.getElementById(id)}
 const postsList = document.getElementById('posts');
 const newBtn = document.getElementById('newBtn');
 const saveBtn = document.getElementById('saveBtn');
-const createBtn = document.getElementById('createBtn');
 const deleteBtn = document.getElementById('deleteBtn');
 const renameBtn = document.getElementById('renameBtn');
 const imageFolderSel = document.getElementById('imageFolder');
@@ -15,6 +14,7 @@ const togglePreviewBtn = document.getElementById('togglePreview');
 const titleInput = document.getElementById('title');
 const dateInput = document.getElementById('date');
 const authorInput = document.getElementById('author');
+const authorDatalist = document.getElementById('authorOptions');
 const categoriesButton = document.getElementById('categoriesButton');
 const categoriesMenu = document.getElementById('categoriesMenu');
 const categoriesList = document.getElementById('categoriesList');
@@ -95,14 +95,28 @@ const hiddenFile = document.createElement('input'); hiddenFile.type = 'file'; hi
 hiddenFile.addEventListener('change', async () => {
   const f = hiddenFile.files[0]; if(!f) return;
   const fd = new FormData(); fd.append('image', f);
-  // map upload folder under author name when author is provided
-  const selected = imageFolderSel && imageFolderSel.value ? imageFolderSel.value : 'uploads';
-  const authorPart = sanitizeFolderName(authorInput && authorInput.value ? authorInput.value : '');
-  const folder = authorPart ? (authorPart + '/' + sanitizeFolderName(selected)) : sanitizeFolderName(selected);
-  fd.append('folder', folder);
+  // always upload to assets/images/uploads
+  fd.append('folder', 'uploads');
+  // attach a temp id so the uploaded filename is unique per preview session
+  const tempId = Date.now().toString(36);
+  fd.append('tempId', tempId);
+  const dateVal = dateInput && dateInput.value ? dateInput.value : new Date().toISOString().slice(0,10);
+  const titleVal = titleInput && titleInput.value ? titleInput.value : '';
+  const authorVal = authorInput && authorInput.value ? authorInput.value : '';
+  const ext = getImageExt(f.name);
+  const tempFilename = buildTempImageName(dateVal, titleVal, authorVal, ext, tempId);
+  fd.append('name', tempFilename);
+  fd.append('author', authorInput && authorInput.value ? authorInput.value : '');
+  fd.append('title', titleInput && titleInput.value ? titleInput.value : '');
+  fd.append('date', dateInput && dateInput.value ? dateInput.value : '');
   const res = await fetch('/api/upload', { method: 'POST', body: fd });
   const j = await res.json();
-  if(j.url){ previewImagePathEl.textContent = j.url; showStatus('Uploaded: ' + j.url, 'success'); renderPreview(); checkDirty(); } else showStatus('Upload failed', 'error');
+  if(j.url){
+    const normalized = j.url.replace(/^\//, '');
+    previewImagePathEl.textContent = normalized;
+    showStatus((j.duplicate ? 'Reused existing image: ' : 'Uploaded: ') + normalized, 'success');
+    renderPreview(); checkDirty();
+  } else showStatus('Upload failed', 'error');
 });
 
 // toggle dropdown menu
@@ -192,7 +206,7 @@ textarea.addEventListener('input', renderPreview);
 
 // keyboard shortcuts
 window.addEventListener('keydown', (e)=>{
-  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's'){ e.preventDefault(); if(current) saveCurrent(); else createNew(); }
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's'){ e.preventDefault(); if(current) saveCurrent(); else saveNewFromForm(); }
   if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b'){ e.preventDefault(); handleToolbar('bold'); }
 });
 
@@ -240,6 +254,22 @@ async function loadCategories(){
   }catch(e){ console.warn(e); }
 }
 
+async function loadAuthors(){
+  try{
+    const res = await fetch('/api/posts'); const posts = await res.json();
+    const set = new Set();
+    posts.forEach(p=>{ if(p.data && p.data.author){ const a = String(p.data.author).trim(); if(a) set.add(a); }});
+    if(authorDatalist){
+      authorDatalist.innerHTML = '';
+      Array.from(set).sort().forEach(a=>{
+        const opt = document.createElement('option');
+        opt.value = a;
+        authorDatalist.appendChild(opt);
+      });
+    }
+  }catch(e){ console.warn(e); }
+}
+
 async function loadPost(filename){
   const res = await fetch('/api/posts/' + filename); const body = await res.json();
   const raw = body.content;
@@ -267,14 +297,60 @@ async function loadPost(filename){
     if(cats.length){ await loadCategories(); setSelectedCategories(cats); }
     else { /* no categories selected */ }
     textarea.value = content;
-    previewImagePathEl.textContent = meta.image || '(none)';
-  } else { textarea.value = raw; }
+  previewImagePathEl.textContent = meta.image || '(none)';
+  updateFilenamePreview();
+} else { textarea.value = raw; }
   current = filename; updateActiveList(); renderPreview(); captureState();
 }
 
 function updateActiveList(){ Array.from(postsList.children).forEach(li=>{ li.classList.toggle('active', li.dataset.filename === current); }); }
 
 function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+
+function buildFilename(dateVal, titleVal, authorVal){
+  const date = dateVal || new Date().toISOString().slice(0,10);
+  const titleSlug = slugify(titleVal || 'post') || 'post';
+  const authorSlug = slugify(authorVal || '');
+  const slugPart = authorSlug ? `${titleSlug}-${authorSlug}` : titleSlug;
+  return `${date}-${slugPart}.md`;
+}
+
+function buildImageName(dateVal, titleVal, authorVal, ext){
+  const date = dateVal || new Date().toISOString().slice(0,10);
+  const titleSlug = slugify(titleVal || 'post') || 'post';
+  const authorSlug = slugify(authorVal || 'author') || 'author';
+  const safeExt = ext && ext.startsWith('.') ? ext : '.png';
+  return `${date}-${titleSlug}-${authorSlug}${safeExt}`;
+}
+
+function buildTempImageName(dateVal, titleVal, authorVal, ext, tempId){
+  const base = buildImageName(dateVal, titleVal, authorVal, ext);
+  const tid = tempId || Date.now().toString(36);
+  const lastDot = base.lastIndexOf('.');
+  const stem = lastDot > -1 ? base.slice(0, lastDot) : base;
+  const suffix = lastDot > -1 ? base.slice(lastDot) : (ext && ext.startsWith('.') ? ext : '.png');
+  return `${stem}-${tid}${suffix}`;
+}
+
+function getImageExt(pathStr){
+  const m = String(pathStr||'').match(/(\.[a-zA-Z0-9]+)$/);
+  return m ? m[1] : '.png';
+}
+
+function syncImagePathWithMeta(){
+  const currentPath = previewImagePathEl && previewImagePathEl.textContent ? previewImagePathEl.textContent.trim() : '';
+  if(!currentPath || currentPath === '(none)') return;
+  if(!currentPath.startsWith('assets/images/uploads/')) return;
+  const date = dateInput.value || new Date().toISOString().slice(0,10);
+  const title = titleInput.value || 'post';
+  const author = authorInput.value || 'author';
+  const ext = getImageExt(currentPath);
+  const expectedName = buildImageName(date, title, author, ext);
+  const expectedPath = `assets/images/uploads/${expectedName}`;
+  if(expectedPath !== currentPath){
+    return expectedPath;
+  }
+}
 
 // helper: get/set multiple selected categories
 function getSelectedCategories(){
@@ -303,14 +379,18 @@ function updateCategoriesButton(){
 // new post button
 newBtn.addEventListener('click', ()=>{ current = null; 
    titleInput.value=''; dateInput.value=new Date().toISOString().slice(0,10); authorInput.value=''; 
+  // refresh selectable tags and authors from existing posts
+  loadCategories(); 
+  loadAuthors();
   // clear multi-select
   if(categoriesList) { Array.from(categoriesList.querySelectorAll('input[type="checkbox"]')).forEach(cb => cb.checked = false); updateCategoriesButton(); }
-  previewImagePathEl.textContent='(none)'; textarea.value=''; renderPreview(); updateActiveList(); captureState(); });
+  previewImagePathEl.textContent='(none)'; textarea.value=''; renderPreview(); updateFilenamePreview(); updateActiveList(); captureState(); });
 
 function updateFilenamePreview(){
   const title = titleInput.value || 'post';
   const date = dateInput.value || new Date().toISOString().slice(0,10);
-  const generated = date + '-' + slugify(title) + '.md';
+  const author = authorInput.value || '';
+  const generated = buildFilename(date, title, author);
   previewFilenameEl.textContent = generated;
 }
  
@@ -320,24 +400,20 @@ function updateImagePreviewPath(){
 }
 
 // update previews live
-[titleInput, dateInput].forEach(i=>i.addEventListener('input', updateFilenamePreview));
+[titleInput, dateInput, authorInput].forEach(i=>i.addEventListener('input', updateFilenamePreview));
 // imageInput.addEventListener('input', updateImagePreviewPath);
 
 // call after loads
 updateFilenamePreview(); updateImagePreviewPath();
 
-createBtn.addEventListener('click', createNew);
-async function createNew(){ const title = titleInput.value || 'post'; const date = dateInput.value || new Date().toISOString().slice(0,10); let filename = date + '-' + slugify(title) + '.md';
-  // ensure it ends with .md
-  if(!filename.endsWith('.md')) filename += '.md';
-  // validate prefix
-  if(!filenameValidPrefix(filename)) return alert('Filename must start with YYYY-MM-DD-');
-  const resCheck = await fetch('/api/posts'); const posts = await resCheck.json(); if(posts.some(p=>p.filename === filename)){ if(!confirm('Filename exists. Overwrite?')) return; }
-  await saveAs(filename); await loadPosts(); }
-
-saveBtn.addEventListener('click', (e)=>{ e.preventDefault(); if(!current){ showStatus('No post selected. Use Create to make a new post.', 'error'); return; } saveCurrent(); });
+saveBtn.addEventListener('click', (e)=>{ e.preventDefault(); if(!current){ saveNewFromForm(); } else { saveCurrent(); } });
 async function saveCurrent(){ if(!current) return; // validate filename still
   if(!filenameValidPrefix(current)) return alert('Current filename does not start with YYYY-MM-DD-'); await saveAs(current); await loadPosts(); }
+
+async function saveNewFromForm(){ const title = titleInput.value || 'post'; const date = dateInput.value || new Date().toISOString().slice(0,10); const author = authorInput.value || ''; const filename = buildFilename(date, title, author);
+  if(!filenameValidPrefix(filename)) return showStatus('Filename must start with YYYY-MM-DD-', 'error');
+  const resCheck = await fetch('/api/posts'); const posts = await resCheck.json(); if(posts.some(p=>p.filename === filename)){ if(!confirm('Filename exists. Overwrite?')) return; }
+  await saveAs(filename); await loadPosts(); captureState(); }
 
 async function saveAs(filename){ const title = titleInput.value || ''; const date = dateInput.value || ''; const author = authorInput.value || ''; 
   // collect selected categories and any custom comma-separated entries
@@ -503,7 +579,9 @@ async function saveCurrent(){ if(!current) return; if(!filenameValidPrefix(curre
 async function saveAs(filename){ const title = titleInput.value || ''; const date = dateInput.value || ''; const author = authorInput.value || ''; 
   // collect selected categories
   const selectedCats = getSelectedCategories();
-  const image = previewImagePathEl.textContent && previewImagePathEl.textContent !== '(none)' ? previewImagePathEl.textContent : ''; const content = textarea.value || '';
+  const imageRaw = previewImagePathEl.textContent && previewImagePathEl.textContent !== '(none)' ? previewImagePathEl.textContent : '';
+  let image = imageRaw ? imageRaw.replace(/^\//, '') : '';
+  const content = textarea.value || '';
   
   // validate filename format
   if(!filename || !filename.endsWith('.md')) return showStatus('Filename must end with .md', 'error');
@@ -522,16 +600,32 @@ async function saveAs(filename){ const title = titleInput.value || ''; const dat
     if(!confirm(`Filename date (${filenameDate[1]}) doesn't match post date (${date}).\nContinue anyway?`)) return;
   }
   
+  // if image lives under uploads, request rename on save to match current meta
+  let renamePayload = null;
+  if(image && image.startsWith('assets/images/uploads/')){
+    const ext = getImageExt(image);
+    const expectedName = buildImageName(date, title, author, ext);
+    const expectedPath = `assets/images/uploads/${expectedName}`;
+    if(expectedPath !== image){
+      renamePayload = { from: image, to: expectedPath };
+      image = expectedPath;
+      previewImagePathEl.textContent = expectedPath;
+    }
+  }
+
   const catsYaml = selectedCats.map(c=>`"${c}"`).join(', ');
   const meta = ['---', `layout: post`, `title: "${title}"`, `author: ${author}`, `date: ${date}`, `categories: [${catsYaml}]`, `image: ${image}`, '---', ''].join('\n');
   const full = meta + '\n' + content + '\n';
   const method = current === filename ? 'PUT' : 'POST'; const url = method === 'POST' ? '/api/posts' : '/api/posts/' + filename; const body = method === 'POST' ? { filename, content: full } : { content: full };
+
+  if(renamePayload){ body.imageRename = renamePayload; }
+
   const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); const j = await res.json(); if(j.error) showStatus('Error: ' + j.error, 'error'); else { current = filename; 
     previewFilenameEl.textContent = filename; showStatus('Saved ' + filename, 'success'); updateActiveList(); }
 }
 
 // capture initial state after initial loads
-loadPosts(); loadImageFolders(); renderPreview(); captureState();
+loadPosts(); loadCategories(); loadAuthors(); loadImageFolders(); renderPreview(); captureState();
 
 // before unload warn (non-blocking modal) - show basic browser message as fallback
 window.addEventListener('beforeunload', (e)=>{
