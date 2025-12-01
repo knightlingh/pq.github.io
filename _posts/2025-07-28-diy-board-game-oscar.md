@@ -1,9 +1,9 @@
 ---
 layout: post
 title: "DIY board game"
-author: Oscar
+author: oscar
 date: 2025-07-28
-categories: []
+categories: ["art", "painting"]
 image: assets/images/uploads/2025-07-28-diy-board-game-oscar.png
 ---
 
