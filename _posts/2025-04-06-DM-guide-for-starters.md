@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "The DM guide"
-author: oscar
+authors: [oscar]
 date: 2025-04-06
 categories: ["RPG", "d&d", "game"]
 image: assets/images/oscar/dm.webp

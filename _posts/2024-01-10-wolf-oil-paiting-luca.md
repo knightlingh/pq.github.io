@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Wolf"
-author: luca
+authors: [luca]
 date: 2024-01-10
 categories: ["art", "painting"]
 image: assets/images/luca/wolf.webp

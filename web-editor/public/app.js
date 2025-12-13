@@ -39,6 +39,21 @@ function sanitizeFolderName(s){
     .replace(/-+/g, '-').replace(/(^-|-$)/g, '');
 }
 
+function parseAuthors(raw){
+  if(!raw) return [];
+  if(Array.isArray(raw)) return raw.map(a=>String(a).trim()).filter(Boolean);
+  return String(raw||'').split(',').map(s=>s.trim()).filter(Boolean);
+}
+
+function normalizeAuthors(raw){
+  return parseAuthors(raw).map(a=>slugify(a)).filter(Boolean);
+}
+
+function primaryAuthor(raw){
+  const authors = normalizeAuthors(raw);
+  return authors.length ? authors[0] : '';
+}
+
 // status indicator helper
 const statusIndicator = document.getElementById('statusIndicator');
 let statusTimer = null;
@@ -52,7 +67,7 @@ function showStatus(message, type='info', duration=3000){
 }
 
 // validate metadata format
-function validateMetadata(title, date, author, categories, image){
+function validateMetadata(title, date, authors, categories, image){
   const errors = [];
   
   // validate date format
@@ -71,9 +86,10 @@ function validateMetadata(title, date, author, categories, image){
     errors.push('Title cannot be empty');
   }
   
-  // validate author if provided
-  if(author && !/^[a-zA-Z0-9\s\-_.]+$/.test(author)){
-    errors.push('Author contains invalid characters');
+  // validate authors if provided
+  const normalizedAuthors = normalizeAuthors(authors);
+  if(normalizedAuthors.some(a=>!/^[a-z0-9][a-z0-9-_]*$/.test(a))){
+    errors.push('Authors must use letters, numbers, dashes, or underscores');
   }
   
   // validate categories if provided
@@ -102,11 +118,11 @@ hiddenFile.addEventListener('change', async () => {
   fd.append('tempId', tempId);
   const dateVal = dateInput && dateInput.value ? dateInput.value : new Date().toISOString().slice(0,10);
   const titleVal = titleInput && titleInput.value ? titleInput.value : '';
-  const authorVal = authorInput && authorInput.value ? authorInput.value : '';
+  const authorVal = primaryAuthor(authorInput && authorInput.value ? authorInput.value : '');
   const ext = getImageExt(f.name);
   const tempFilename = buildTempImageName(dateVal, titleVal, authorVal, ext, tempId);
   fd.append('name', tempFilename);
-  fd.append('author', authorInput && authorInput.value ? authorInput.value : '');
+  fd.append('author', authorVal);
   fd.append('title', titleInput && titleInput.value ? titleInput.value : '');
   fd.append('date', dateInput && dateInput.value ? dateInput.value : '');
   const res = await fetch('/api/upload', { method: 'POST', body: fd });
@@ -258,7 +274,12 @@ async function loadAuthors(){
   try{
     const res = await fetch('/api/posts'); const posts = await res.json();
     const set = new Set();
-    posts.forEach(p=>{ if(p.data && p.data.author){ const a = String(p.data.author).trim(); if(a) set.add(a); }});
+    posts.forEach(p=>{
+      if(p.data){
+        const authors = normalizeAuthors(p.data.authors || p.data.author);
+        authors.forEach(a=>{ if(a) set.add(a); });
+      }
+    });
     if(authorDatalist){
       authorDatalist.innerHTML = '';
       Array.from(set).sort().forEach(a=>{
@@ -282,7 +303,9 @@ async function loadPost(filename){
     titleInput.value = meta.title ? meta.title.replace(/^"|"$/g,'') : '';
     // use date from frontmatter, fallback to filename date
     dateInput.value = meta.date || filenameDate || '';
-    authorInput.value = meta.author || '';
+    const authorsRaw = meta.authors || meta.author || '';
+    const authors = normalizeAuthors(authorsRaw);
+    authorInput.value = authors.join(', ');
     const catsRaw = meta.categories || '';
     // parse categories into array
     let cats = [];
@@ -310,7 +333,7 @@ function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/
 function buildFilename(dateVal, titleVal, authorVal){
   const date = dateVal || new Date().toISOString().slice(0,10);
   const titleSlug = slugify(titleVal || 'post') || 'post';
-  const authorSlug = slugify(authorVal || '');
+  const authorSlug = primaryAuthor(authorVal);
   const slugPart = authorSlug ? `${titleSlug}-${authorSlug}` : titleSlug;
   return `${date}-${slugPart}.md`;
 }
@@ -318,7 +341,7 @@ function buildFilename(dateVal, titleVal, authorVal){
 function buildImageName(dateVal, titleVal, authorVal, ext){
   const date = dateVal || new Date().toISOString().slice(0,10);
   const titleSlug = slugify(titleVal || 'post') || 'post';
-  const authorSlug = slugify(authorVal || 'author') || 'author';
+  const authorSlug = primaryAuthor(authorVal) || 'author';
   const safeExt = ext && ext.startsWith('.') ? ext : '.png';
   return `${date}-${titleSlug}-${authorSlug}${safeExt}`;
 }
@@ -343,7 +366,7 @@ function syncImagePathWithMeta(){
   if(!currentPath.startsWith('assets/images/uploads/')) return;
   const date = dateInput.value || new Date().toISOString().slice(0,10);
   const title = titleInput.value || 'post';
-  const author = authorInput.value || 'author';
+  const author = primaryAuthor(authorInput.value) || 'author';
   const ext = getImageExt(currentPath);
   const expectedName = buildImageName(date, title, author, ext);
   const expectedPath = `assets/images/uploads/${expectedName}`;
@@ -389,8 +412,8 @@ newBtn.addEventListener('click', ()=>{ current = null;
 function updateFilenamePreview(){
   const title = titleInput.value || 'post';
   const date = dateInput.value || new Date().toISOString().slice(0,10);
-  const author = authorInput.value || '';
-  const generated = buildFilename(date, title, author);
+  const authors = normalizeAuthors(authorInput.value);
+  const generated = buildFilename(date, title, authors);
   previewFilenameEl.textContent = generated;
 }
  
@@ -410,12 +433,12 @@ saveBtn.addEventListener('click', (e)=>{ e.preventDefault(); if(!current){ saveN
 async function saveCurrent(){ if(!current) return; // validate filename still
   if(!filenameValidPrefix(current)) return alert('Current filename does not start with YYYY-MM-DD-'); await saveAs(current); await loadPosts(); }
 
-async function saveNewFromForm(){ const title = titleInput.value || 'post'; const date = dateInput.value || new Date().toISOString().slice(0,10); const author = authorInput.value || ''; const filename = buildFilename(date, title, author);
+async function saveNewFromForm(){ const title = titleInput.value || 'post'; const date = dateInput.value || new Date().toISOString().slice(0,10); const authors = normalizeAuthors(authorInput.value); const filename = buildFilename(date, title, authors);
   if(!filenameValidPrefix(filename)) return showStatus('Filename must start with YYYY-MM-DD-', 'error');
   const resCheck = await fetch('/api/posts'); const posts = await resCheck.json(); if(posts.some(p=>p.filename === filename)){ if(!confirm('Filename exists. Overwrite?')) return; }
   await saveAs(filename); await loadPosts(); captureState(); }
 
-async function saveAs(filename){ const title = titleInput.value || ''; const date = dateInput.value || ''; const author = authorInput.value || ''; 
+async function saveAs(filename){ const title = titleInput.value || ''; const date = dateInput.value || ''; const authors = normalizeAuthors(authorInput.value); 
   // collect selected categories and any custom comma-separated entries
   const selectedCats = getSelectedCategories();
   const customCats = categoriesCustom && categoriesCustom.value ? categoriesCustom.value.split(',').map(s=>s.trim()).filter(Boolean) : [];
@@ -425,7 +448,8 @@ async function saveAs(filename){ const title = titleInput.value || ''; const dat
   if(!filename || !filename.endsWith('.md')) return alert('Filename must end with .md');
   if(!filenameValidPrefix(filename)) return alert('Filename must start with YYYY-MM-DD-');
   const catsYaml = allCats.map(c=>`"${c}"`).join(', ');
-  const meta = ['---', `layout: post`, `title: "${title}"`, `author: ${author}`, `date: ${date}`, `categories: [${catsYaml}]`, `image: ${image}`, '---', ''].join('\n');
+  const authorsYaml = authors.join(', ');
+  const meta = ['---', `layout: post`, `title: "${title}"`, `authors: [${authorsYaml}]`, `date: ${date}`, `categories: [${catsYaml}]`, `image: ${image}`, '---', ''].join('\n');
   const full = meta + '\n' + content + '\n';
   const method = current === filename ? 'PUT' : 'POST'; const url = method === 'POST' ? '/api/posts' : '/api/posts/' + filename; const body = method === 'POST' ? { filename, content: full } : { content: full };
   const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); const j = await res.json(); if(j.error) alert('Error: ' + j.error); else { current = filename; 
@@ -466,7 +490,7 @@ function captureState(){
   originalState = {
     title: titleInput.value,
     date: dateInput.value,
-    author: authorInput.value,
+    authors: authorInput.value,
     categories: getSelectedCategories(),
     image: previewImagePathEl.textContent || '',
     content: textarea.value
@@ -478,7 +502,7 @@ function checkDirty(){
   const now = {
     title: titleInput.value,
     date: dateInput.value,
-    author: authorInput.value,
+    authors: authorInput.value,
     categories: getSelectedCategories(),
     image: previewImagePathEl.textContent || '',
     content: textarea.value
@@ -487,7 +511,7 @@ function checkDirty(){
   updateUnsavedUI();
 }
 
-function captureSnapshot(){ return { title: titleInput.value, date: dateInput.value, author: authorInput.value, categories: getSelectedCategories(), image: previewImagePathEl.textContent || '', content: textarea.value }; }
+function captureSnapshot(){ return { title: titleInput.value, date: dateInput.value, authors: authorInput.value, categories: getSelectedCategories(), image: previewImagePathEl.textContent || '', content: textarea.value }; }
 
 // listen for input changes to mark dirty
 [titleInput, dateInput, authorInput, textarea].forEach(el=> el.addEventListener('input', checkDirty));
@@ -503,7 +527,8 @@ function captureSnapshot(){ return { title: titleInput.value, date: dateInput.va
 // restore draft
 document.getElementById('restoreDraftBtn').addEventListener('click', ()=>{
   const d = loadDraft(); if(!d) return showStatus('No draft available', 'error'); const data = d.data;
-  titleInput.value = data.title; dateInput.value = data.date; authorInput.value = data.author;
+  titleInput.value = data.title; dateInput.value = data.date; const authorsFromDraft = Array.isArray(data.authors) ? data.authors.join(', ') : (data.authors || data.author || '');
+  authorInput.value = authorsFromDraft;
   // restore categories (array or comma string)
   const cats = Array.isArray(data.categories) ? data.categories : (data.categories ? String(data.categories).split(',').map(s=>s.trim()).filter(Boolean) : []);
   loadCategories().then(()=>{ if(cats.length) setSelectedCategories(cats); });
@@ -511,9 +536,9 @@ document.getElementById('restoreDraftBtn').addEventListener('click', ()=>{
 });
 
 // undo/redo button handlers
-document.getElementById('undoBtn').addEventListener('click', ()=>{ const state = popUndo(); if(state){ titleInput.value=state.title; dateInput.value=state.date; authorInput.value=state.author; const sc = Array.isArray(state.categories) ? state.categories : (state.categories ? String(state.categories).split(',').map(s=>s.trim()).filter(Boolean) : []); if(sc.length) setSelectedCategories(sc); previewImagePathEl.textContent = state.image || '(none)'; textarea.value=state.content; renderPreview(); checkDirty(); } });
+document.getElementById('undoBtn').addEventListener('click', ()=>{ const state = popUndo(); if(state){ titleInput.value=state.title; dateInput.value=state.date; const authorsVal = Array.isArray(state.authors) ? state.authors.join(', ') : (state.authors || state.author || ''); authorInput.value=authorsVal; const sc = Array.isArray(state.categories) ? state.categories : (state.categories ? String(state.categories).split(',').map(s=>s.trim()).filter(Boolean) : []); if(sc.length) setSelectedCategories(sc); previewImagePathEl.textContent = state.image || '(none)'; textarea.value=state.content; renderPreview(); checkDirty(); } });
 
-document.getElementById('redoBtn').addEventListener('click', ()=>{ const state = popRedo(); if(state){ titleInput.value=state.title; dateInput.value=state.date; authorInput.value=state.author; const sc = Array.isArray(state.categories) ? state.categories : (state.categories ? String(state.categories).split(',').map(s=>s.trim()).filter(Boolean) : []); if(sc.length) setSelectedCategories(sc); previewImagePathEl.textContent = state.image || '(none)'; textarea.value=state.content; renderPreview(); checkDirty(); } });
+document.getElementById('redoBtn').addEventListener('click', ()=>{ const state = popRedo(); if(state){ titleInput.value=state.title; dateInput.value=state.date; const authorsVal = Array.isArray(state.authors) ? state.authors.join(', ') : (state.authors || state.author || ''); authorInput.value=authorsVal; const sc = Array.isArray(state.categories) ? state.categories : (state.categories ? String(state.categories).split(',').map(s=>s.trim()).filter(Boolean) : []); if(sc.length) setSelectedCategories(sc); previewImagePathEl.textContent = state.image || '(none)'; textarea.value=state.content; renderPreview(); checkDirty(); } });
 
 // Draft autosave and undo/redo
 const DRAFT_KEY = 'pq-editor-draft';
@@ -567,8 +592,7 @@ async function loadPosts(){
 }
 
 // ensure capture state after creating/loading
-async function createNew(){ const title = titleInput.value || 'post'; const date = dateInput.value || new Date().toISOString().slice(0,10); let filename = date + '-' + slugify(title) + '.md';
-  if(!filename.endsWith('.md')) filename += '.md';
+async function createNew(){ const title = titleInput.value || 'post'; const date = dateInput.value || new Date().toISOString().slice(0,10); const authors = normalizeAuthors(authorInput.value); let filename = buildFilename(date, title, authors);
   if(!filenameValidPrefix(filename)) return showStatus('Filename must start with YYYY-MM-DD-', 'error');
   const resCheck = await fetch('/api/posts'); const posts = await resCheck.json(); if(posts.some(p=>p.filename === filename)){ if(!confirm('Filename exists. Overwrite?')) return; }
   await saveAs(filename); await loadPosts(); captureState(); }
@@ -576,7 +600,7 @@ async function createNew(){ const title = titleInput.value || 'post'; const date
 async function saveCurrent(){ if(!current) return; if(!filenameValidPrefix(current)) return showStatus('Current filename does not start with YYYY-MM-DD-', 'error'); await saveAs(current); await loadPosts(); captureState(); }
 
 // modify saveAs to write frontmatter metadata from inputs
-async function saveAs(filename){ const title = titleInput.value || ''; const date = dateInput.value || ''; const author = authorInput.value || ''; 
+async function saveAs(filename){ const title = titleInput.value || ''; const date = dateInput.value || ''; const authors = normalizeAuthors(authorInput.value); 
   // collect selected categories
   const selectedCats = getSelectedCategories();
   const imageRaw = previewImagePathEl.textContent && previewImagePathEl.textContent !== '(none)' ? previewImagePathEl.textContent : '';
@@ -588,7 +612,7 @@ async function saveAs(filename){ const title = titleInput.value || ''; const dat
   if(!filenameValidPrefix(filename)) return showStatus('Filename must start with YYYY-MM-DD-', 'error');
   
   // validate metadata
-  const validation = validateMetadata(title, date, author, selectedCats, image);
+  const validation = validateMetadata(title, date, authors, selectedCats, image);
   if(!validation.valid){
     const errorMsg = validation.errors.join('; ');
     return showStatus('Validation error: ' + errorMsg, 'error', 5000);
@@ -604,7 +628,7 @@ async function saveAs(filename){ const title = titleInput.value || ''; const dat
   let renamePayload = null;
   if(image && image.startsWith('assets/images/uploads/')){
     const ext = getImageExt(image);
-    const expectedName = buildImageName(date, title, author, ext);
+    const expectedName = buildImageName(date, title, authors, ext);
     const expectedPath = `assets/images/uploads/${expectedName}`;
     if(expectedPath !== image){
       renamePayload = { from: image, to: expectedPath };
@@ -614,7 +638,8 @@ async function saveAs(filename){ const title = titleInput.value || ''; const dat
   }
 
   const catsYaml = selectedCats.map(c=>`"${c}"`).join(', ');
-  const meta = ['---', `layout: post`, `title: "${title}"`, `author: ${author}`, `date: ${date}`, `categories: [${catsYaml}]`, `image: ${image}`, '---', ''].join('\n');
+  const authorsYaml = authors.join(', ');
+  const meta = ['---', `layout: post`, `title: "${title}"`, `authors: [${authorsYaml}]`, `date: ${date}`, `categories: [${catsYaml}]`, `image: ${image}`, '---', ''].join('\n');
   const full = meta + '\n' + content + '\n';
   const method = current === filename ? 'PUT' : 'POST'; const url = method === 'POST' ? '/api/posts' : '/api/posts/' + filename; const body = method === 'POST' ? { filename, content: full } : { content: full };
 

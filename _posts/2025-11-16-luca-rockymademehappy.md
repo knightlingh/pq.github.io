@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Rocks"
-author: luca
+authors: [luca]
 date: 2025-11-16
 featured: true
 categories: [art, painting]

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Packing for field trip"
-author: twins
+authors: [luca, oscar]
 date: 2025-04-20
 categories: ["diy"]
 image: assets/images/field-trip.webp

@@ -183,6 +183,48 @@ section.recent-posts {
     border-radius: 100%;
 }
 
+.avatar-stack {
+    display: inline-flex;
+    align-items: center;
+}
+
+.avatar-stack .author-thumb {
+    margin-right: -16px;
+    box-shadow: 0 0 0 2px #fff;
+}
+
+.avatar-stack .author-thumb:last-child {
+    margin-right: 12px;
+}
+
+.avatar-stack-sm .game-tile-author-thumb {
+    margin-right: -12px;
+    box-shadow: 0 0 0 2px #fff;
+}
+
+.avatar-stack-sm .game-tile-author-thumb:last-child {
+    margin-right: 8px;
+}
+
+.post-top-meta .avatar-stack .author-thumb {
+    margin-right: -26px;
+    box-shadow: 0 0 0 3px #fff;
+}
+
+.post-top-meta .avatar-stack .author-thumb:last-child {
+    margin-right: 16px;
+}
+
+.author-thumb.avatar-initial,
+.game-tile-author-thumb.avatar-initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #f0f0f0;
+    color: #777;
+    font-weight: 600;
+}
+
 .post-top-meta {
     margin-bottom: 2rem;
 }
@@ -194,6 +236,46 @@ section.recent-posts {
 
 .post-top-meta.authorpage .author-thumb {
     margin-top: 40px;
+}
+
+.post-top-meta .author-names {
+    margin-top: 0;
+    font-size: 1.05rem;
+    gap: 8px;
+    align-items: center;
+    line-height: 1.1;
+    justify-content: center;
+}
+
+.post-top-meta {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.post-top-meta > .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.post-top-meta [class*="col-"] {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+@media (min-width: 576px) {
+    .post-top-meta .author-names {
+        justify-content: flex-start;
+    }
+}
+
+.post-top-meta .author-names a,
+.post-top-meta .author-names span {
+    margin: 0;
+}
+
+.post-top-meta .author-sep {
+    color: rgba(0, 0, 0, .35);
+    margin: 0 6px;
 }
 
 .post-top-meta span {

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "First rock art"
-author: oscar
+authors: [oscar]
 date: 2025-11-16
 categories: ["diy", "trip"]
 image: assets/images/oscar/rock-1.webp

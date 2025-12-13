@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Temple"
-author: luca
+authors: [luca]
 date: 2025-04-14
 categories: ["art", "lego"]
 image: assets/images/luca/lego-temple.webp
