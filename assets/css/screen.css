@@ -357,6 +357,10 @@ section.recent-posts {
     line-height: 1.55;
 }
 
+.games-empty {
+    text-align: center;
+}
+
 .author-grid {
     column-count: 2;
     column-gap: 18px;
@@ -447,7 +451,7 @@ section.recent-posts {
 }
 
 .masonry-grid {
-    column-count: 2;
+    column-count: 3;
     column-gap: 18px;
 }
 

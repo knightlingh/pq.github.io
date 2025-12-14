@@ -1,175 +1,26 @@
 ---
-title: "Games"
 layout: default
-permalink: "/games.html"
+title: "Games"
 ---
 
-<style>
-  .games-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
-    margin-bottom: 3rem;
-  }
+{% assign hero_title = page.title | default: "Games" %}
+{% assign hero_image = page.image %}
+{% assign game_posts = site.posts | where_exp: "post", "post.categories contains 'game' or post.categories contains 'games'" | sort: "date" | reverse %}
 
-  .game-tile {
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    cursor: pointer;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .game-tile:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-  }
-
-  .game-tile-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    background-color: #f0f0f0;
-  }
-
-  .game-tile-content {
-    padding: 1.5rem;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .game-tile-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin: 0 0 0.5rem 0;
-    color: #333;
-  }
-
-  .game-tile-description {
-    font-size: 0.95rem;
-    color: #666;
-    margin-bottom: auto;
-    line-height: 1.5;
-  }
-
-  .game-tile-meta {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #eee;
-    font-size: 0.85rem;
-    color: #999;
-  }
-
-  .game-tile-author {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
-  }
-
-  .game-tile-author-thumb {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    margin-right: 0.5rem;
-  }
-
-  .game-tile-date {
-    color: #999;
-  }
-
-  .game-tile-link {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .game-tile-link:hover {
-    text-decoration: none;
-  }
-
-  @media (max-width: 768px) {
-    .games-grid {
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1.5rem;
-    }
-  }
-
-  @media (max-width: 576px) {
-    .games-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
-
-<div class="games-container">
-  <div class="games-grid">
-    {% assign game_posts = site.posts | where_exp: "post", "post.categories contains 'game'" %}
-    
-    {% if game_posts.size > 0 %}
-      {% for post in game_posts %}
-        {% assign author_list = post.authors %}
-        {% if author_list == nil %}
-        {% assign author_list = post.author | default: '' | split: ',' %}
-        {% endif %}
-        {% assign primary_author_id = author_list | first | strip %}
-        {% assign primary_author = site.authors[primary_author_id] %}
-        <a href="{{ site.baseurl }}{{ post.url }}" class="game-tile-link">
-          <div class="game-tile">
-            {% if post.image %}
-              <img class="game-tile-image" src="{% if post.image contains "://" %}{{ post.image }}{% else %}{{ site.baseurl }}/{{ post.image }}{% endif %}" alt="{{ post.title }}">
-            {% else %}
-              <div class="game-tile-image" style="background-color: #e0e0e0; display: flex; align-items: center; justify-content: center;">
-                <span style="color: #999;">No Image</span>
-              </div>
-            {% endif %}
-            
-            <div class="game-tile-content">
-              <h3 class="game-tile-title">{{ post.title }}</h3>
-              <p class="game-tile-description">{{ post.excerpt | strip_html | truncatewords: 20 }}</p>
-              
-              <div class="game-tile-meta">
-                {% if author_list and primary_author_id %}
-                  <div class="game-tile-author">
-                    <span class="avatar-stack avatar-stack-sm">
-                      {% for aid in author_list %}
-                        {% assign author_id = aid | strip %}
-                        {% assign author = site.authors[author_id] %}
-                        <a href="{{ site.baseurl }}/author/{{ author_id }}/">
-                          {% if author.avatar %}
-                            <img class="game-tile-author-thumb" src="{{site.baseurl}}/{{ author.avatar }}" alt="{{ author.display_name | default: author_id }}">
-                          {% elsif author.gravatar %}
-                            <img class="game-tile-author-thumb" src="https://www.gravatar.com/avatar/{{ author.gravatar }}?s=250&d=mm&r=x" alt="{{ author.display_name | default: author_id }}">
-                          {% else %}
-                            <span class="game-tile-author-thumb avatar-initial">{{ author_id | slice: 0, 1 | upcase }}</span>
-                          {% endif %}
-                        </a>
-                      {% endfor %}
-                    </span>
-                    <span>
-                      {% for aid in author_list %}
-                        {% assign author_id = aid | strip %}
-                        {% assign author = site.authors[author_id] %}
-                        {% assign display_name = author.display_name | default: author_id %}
-                        <a href="{{ site.baseurl }}/author/{{ author_id }}/">{{ display_name }}</a>{% unless forloop.last %}, {% endunless %}
-                      {% endfor %}
-                    </span>
-                  </div>
-                {% endif %}
-                <div class="game-tile-date">{{ post.date | date_to_string }}</div>
-              </div>
-            </div>
-          </div>
-        </a>
-      {% endfor %}
-    {% else %}
-      <div class="col-12">
-        <p style="text-align: center; color: #999; padding: 2rem;">No games available yet.</p>
-      </div>
-    {% endif %}
+<div class="author-page games-page">
+  {% if page.content and page.content != "" %}
+  <div class="author-about">
+    {{ page.content | markdownify }}
   </div>
+  {% endif %}
+
+  {% if game_posts.size > 0 %}
+  <div class="masonry-grid listrecent">
+    {% for post in game_posts %}
+      {% include postbox.html %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="author-about games-empty">No games available yet.</p>
+  {% endif %}
 </div>
