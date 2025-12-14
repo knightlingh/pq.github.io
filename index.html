@@ -138,7 +138,7 @@ title: Home
 
     </div>
 
-    <div class="row listrecent">
+    <div class="masonry-grid listrecent" data-next-url="{% if paginator.next_page %}{{ paginator.next_page_path | relative_url }}{% endif %}">
 
         {% for post in paginator.posts %}
 
@@ -150,12 +150,44 @@ title: Home
 
 </section>
 
-<!-- Pagination
-================================================== -->
-<div class="bottompagination">
-<div class="pointerup"><i class="fa fa-caret-up"></i></div>
-<span class="navigation" role="navigation">
-    {% include pagination.html %}
-</span>
-</div>
+<script>
+(function(){
+  const grid = document.querySelector('.masonry-grid');
+  if(!grid) return;
+  let nextUrl = grid.dataset.nextUrl || null;
+  let loading = false;
 
+  function appendPosts(html){
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const newGrid = doc.querySelector('.masonry-grid');
+    if(!newGrid) return;
+    nextUrl = newGrid.dataset.nextUrl || null;
+    const items = newGrid.children;
+    Array.from(items).forEach(node=>{
+      grid.appendChild(node);
+    });
+  }
+
+  async function loadMore(){
+    if(loading || !nextUrl) return;
+    loading = true;
+    try{
+      const res = await fetch(nextUrl);
+      const text = await res.text();
+      appendPosts(text);
+    }catch(e){ console.warn('Load more failed', e); }
+    loading = false;
+  }
+
+  function onScroll(){
+    if(!nextUrl) return;
+    const scrollPos = window.innerHeight + window.scrollY;
+    const trigger = document.body.offsetHeight - 600;
+    if(scrollPos >= trigger){
+      loadMore();
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+})();
+</script>
