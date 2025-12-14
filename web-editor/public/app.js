@@ -30,6 +30,7 @@ const previewFilenameEl = document.getElementById('previewFilename');
 
 let current = null;
 let isPreviewVisible = true;
+let currentImageMode = 'inline';
 
 // helper to validate filename prefix
 function filenameValidPrefix(name){
@@ -115,10 +116,14 @@ function validateMetadata(title, date, authors, categories, image){
 const hiddenFile = document.createElement('input'); hiddenFile.type = 'file'; hiddenFile.style.display = 'none'; document.body.appendChild(hiddenFile);
 hiddenFile.addEventListener('change', async () => {
   const f = hiddenFile.files[0]; if(!f) return;
-  await handleImageFile(f);
+  const mode = currentImageMode || 'inline';
+  await handleImageFile(f, { mode });
+  currentImageMode = 'inline';
 });
 
-async function handleImageFile(f, silentStatus){
+async function handleImageFile(f, opts={}){
+  const mode = opts.mode || 'inline';
+  const silentStatus = opts.silentStatus;
   const fd = new FormData(); fd.append('image', f);
   // always upload to assets/images/uploads
   fd.append('folder', 'uploads');
@@ -137,11 +142,21 @@ async function handleImageFile(f, silentStatus){
   const res = await fetch('/api/upload', { method: 'POST', body: fd });
   const j = await res.json();
   if(j.url){
-    const normalized = j.url.replace(/^\//, '');
-    previewImagePathEl.textContent = normalized;
-    if(!silentStatus) showStatus((j.duplicate ? 'Reused existing image: ' : 'Uploaded: ') + normalized, 'success');
-    insertImageMarkdown(normalized);
-    renderPreview(); checkDirty();
+    const normalized = j.url.startsWith('/') ? j.url : '/' + j.url;
+    const hasCover = previewImagePathEl && previewImagePathEl.textContent && previewImagePathEl.textContent !== '(none)';
+    if(mode === 'cover'){
+      previewImagePathEl.textContent = normalized;
+      if(!silentStatus) showStatus((j.duplicate ? 'Reused existing cover: ' : 'Cover set: ') + normalized, 'success');
+      renderPreview(); checkDirty();
+    } else {
+      insertImageMarkdown(normalized);
+      if(!silentStatus) showStatus((j.duplicate ? 'Reused image: ' : 'Inserted image: ') + normalized, 'success');
+      renderPreview(); checkDirty();
+      // inline uploads should not override cover
+      if(!hasCover && previewImagePathEl.textContent === '(none)'){
+        // leave cover unset; user sets via cover button
+      }
+    }
   } else showStatus('Upload failed', 'error');
 }
 
@@ -276,7 +291,8 @@ function handleToolbar(action){
   else if(action === 'bold') replace('**' + (text.slice(start,end) || 'bold') + '**');
   else if(action === 'italic') replace('*' + (text.slice(start,end) || 'italic') + '*');
   else if(action === 'link') replace('[' + (text.slice(start,end) || 'link text') + '](http://)');
-  else if(action === 'image') hiddenFile.click();
+  else if(action === 'cover-image'){ currentImageMode = 'cover'; hiddenFile.click(); }
+  else if(action === 'inline-image'){ currentImageMode = 'inline'; hiddenFile.click(); }
   else if(action === 'code') replace('``\n' + (text.slice(start,end) || 'code') + '\n```');
 }
 
