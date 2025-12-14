@@ -6,7 +6,10 @@ layout: default
 {% assign author = site.authors[author_id] %}
 {% assign posts_match = site.posts | where_exp: "p", "p.authors contains author_id" %}
 {% assign posts_fallback = site.posts | where: "author", author_id %}
-{% assign posts_combined = posts_match | concat: posts_fallback | uniq | sort: "date" | reverse %}
+{% assign posts_combined = posts_match | concat: posts_fallback | uniq %}
+{% assign featured_posts = posts_combined | where_exp: "p", "p.featured == true" | sort: "date" | reverse %}
+{% assign regular_posts = posts_combined | where_exp: "p", "p.featured != true" | sort: "date" | reverse %}
+{% assign posts_combined = featured_posts | concat: regular_posts %}
 {% assign category_list = posts_combined | map: "categories" | join: "," | split: "," | uniq | sort %}
 {% assign latest_post = posts_combined | first %}
 {% assign hero_title = page.title | default: author.display_name | default: author_id %}
