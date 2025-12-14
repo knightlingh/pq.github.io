@@ -5,6 +5,7 @@ authors: ["luca"]
 date: 2025-07-29
 categories: ["diy"]
 image: assets/images/uploads/2025-07-29-make-own-board-game-luca.png
+featured: true
 ---
 
 Do the sketch, then ask AI to generate the card based on the sketch.
