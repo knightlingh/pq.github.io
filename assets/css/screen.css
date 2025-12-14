@@ -197,6 +197,112 @@ section.recent-posts {
     margin-right: 12px;
 }
 
+.post-meta-wrap {
+    margin-top: 20px;
+    padding: 12px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #f6f6f6;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+}
+
+.post-meta-author {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.post-meta-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: rgba(0,0,0,.6);
+    font-size: 0.95rem;
+    min-width: 200px;
+}
+
+.post-meta-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.post-meta-tags .tag-pill {
+    padding: 4px 10px;
+    background: #f2f2f2;
+    border-radius: 999px;
+    color: #555;
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+
+.post-meta-tags .tag-pill:hover {
+    background: #e2e2e2;
+}
+
+.post-content-tight h1,
+.post-content-tight h2,
+.post-content-tight h3,
+.post-content-tight h4 {
+    margin-top: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.PageNavigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: nowrap;
+    margin: 24px auto 25px;
+    max-width: 720px;
+}
+
+.PageNavigation a {
+    white-space: nowrap;
+}
+
+.PageNavigation .prev {
+    margin-right: auto;
+}
+
+.PageNavigation .next {
+    margin-left: auto;
+}
+
+@media (max-width: 576px) {
+    .featured-image {
+        margin-bottom: 16px;
+    }
+    .post-top-meta {
+        margin-top: 8px;
+    }
+    .post-meta-wrap {
+        padding: 10px 0;
+        gap: 12px;
+    }
+    .post-meta-author .author-thumb {
+        width: 52px;
+        height: 52px;
+    }
+    .post-meta-details {
+        font-size: 0.9rem;
+        gap: 4px;
+    }
+    .post-meta-tags .tag-pill {
+        padding: 3px 8px;
+        font-size: 0.8rem;
+    }
+    .PageNavigation {
+        margin-top: 12px;
+        margin-left: 0;
+        margin-right: 0;
+        max-width: none;
+    }
+}
+
 .avatar-stack-sm .game-tile-author-thumb {
     margin-right: -12px;
     box-shadow: 0 0 0 2px #fff;
