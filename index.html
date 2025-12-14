@@ -14,7 +14,7 @@ title: Home
 
 <section class="hero-slider">
   <div class="section-title">
-    <h2><span>Latest Highlights</span></h2>
+    <h2><span>Highlights</span></h2>
   </div>
 
   <div class="hero-slider__viewport">
@@ -38,12 +38,12 @@ title: Home
 </section>
 
 <style>
-.hero-slider { margin-bottom: 2rem; position: relative; }
-.hero-slider__viewport { position: relative; overflow: hidden; border-radius: 14px; background: transparent; }
-.hero-slider__track { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; transition: transform 0.6s ease; background: transparent; column-gap: 0; }
-.hero-slide { position: relative; min-height: 320px; border-radius: 12px; overflow: hidden; }
-.hero-slide__link { display: block; height: 100%; color: inherit; text-decoration: none; border: 1px solid transparent; border-radius: 12px; background: transparent; }
-.hero-slide__image { height: 100%; background-size: contain; background-repeat: no-repeat; background-position: center; filter: brightness(0.9); background-color: #0f172a; }
+.hero-slider { margin: 0 auto 28px; position: relative; max-width: 1024px; }
+.hero-slider__viewport { position: relative; overflow: hidden; border-radius: 14px; background: transparent; box-shadow: none; padding: 6px 0; }
+.hero-slider__track { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; transition: transform 0.6s ease; background: transparent; column-gap: 12px; align-items: stretch; }
+.hero-slide { position: relative; min-height: 340px; }
+.hero-slide__link { display: block; height: 100%; color: inherit; text-decoration: none; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.hero-slide__image { height: 100%; background-size: cover; background-repeat: no-repeat; background-position: center; filter: brightness(0.9); background-color: #0f172a; }
 .hero-slide__overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 1.2rem; }
 .hero-slide__meta { margin: 0 0 0.25rem; color: #d9e2ec; letter-spacing: 0.04em; font-weight: 600; }
 .hero-slide__title { margin: 0; color: #f8fbff; font-size: 1.6rem; line-height: 1.2; }
@@ -52,11 +52,12 @@ title: Home
 .hero-slider__control.next { right: 10px; }
 .hero-slider__control:hover { background: rgba(15,23,42,0.9); }
 @media (max-width: 640px) {
+  .hero-slide { min-height: 280px; }
   .hero-slide__title { font-size: 1.3rem; }
   .hero-slide__overlay { padding: 1rem; }
 }
 @media (min-width: 900px) {
-  .hero-slider__track { grid-auto-columns: calc(50% - 8px); column-gap: 16px; background: transparent; }
+  .hero-slider__track { grid-auto-columns: calc(50% - 6px); column-gap: 12px; background: transparent; }
   .hero-slide__title { font-size: 1.4rem; }
 }
 </style>
