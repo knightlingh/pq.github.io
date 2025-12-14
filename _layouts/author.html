@@ -1,0 +1,88 @@
+---
+layout: default
+---
+
+{% assign author_id = page.author_id %}
+{% assign author = site.authors[author_id] %}
+{% assign posts_match = site.posts | where_exp: "p", "p.authors contains author_id" %}
+{% assign posts_fallback = site.posts | where: "author", author_id %}
+{% assign posts_combined = posts_match | concat: posts_fallback | uniq | sort: "date" | reverse %}
+{% assign category_list = posts_combined | map: "categories" | join: "," | split: "," | uniq | sort %}
+{% assign latest_post = posts_combined | first %}
+{% assign hero_title = page.title | default: author.display_name | default: author_id %}
+
+<div class="author-page">
+  <div class="author-hero">
+    <div class="author-hero-avatar">
+      {% if author.avatar %}
+      <img src="{{site.baseurl}}/{{ author.avatar }}" alt="{{ author.display_name | default: author_id }}">
+      {% elsif author.gravatar %}
+      <img src="https://www.gravatar.com/avatar/{{ author.gravatar }}?s=250&d=mm&r=x" alt="{{ author.display_name | default: author_id }}">
+      {% else %}
+      <span class="avatar-initial">{{ author_id | slice: 0, 1 | upcase }}</span>
+      {% endif %}
+    </div>
+    <div class="author-hero-meta">
+      <h1>{{ hero_title }}</h1>
+      {% if author.description %}
+      <p class="author-hero-bio">{{ author.description }}</p>
+      {% endif %}
+      <div class="author-hero-links">
+        {% if author.web %}<a href="{{ author.web }}" target="_blank" rel="noopener">Website</a>{% endif %}
+        {% if author.twitter %}<a href="{{ author.twitter }}" target="_blank" rel="noopener">Twitter</a>{% endif %}
+      </div>
+      <div class="author-hero-stats">
+        <div class="stat"><span class="stat-number">{{ posts_combined.size }}</span><span class="stat-label">Posts</span></div>
+        <div class="stat"><span class="stat-number">{{ category_list | size }}</span><span class="stat-label">Categories</span></div>
+        {% if latest_post %}<div class="stat"><span class="stat-number">{{ latest_post.date | date: "%b %d, %Y" }}</span><span class="stat-label">Latest</span></div>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if page.content and page.content != "" %}
+  <div class="author-about">
+    {{ page.content | markdownify }}
+  </div>
+  {% endif %}
+
+  {% if category_list.size > 0 %}
+  <div class="author-filter">
+    {% for cat in category_list %}
+    <a class="tag-pill" href="{{site.baseurl}}/categories#{{ cat | replace: " ","-" }}">{{ cat }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if posts_combined.size > 0 %}
+  <div class="author-grid">
+    {% for post in posts_combined %}
+    <article class="author-card">
+      <a class="author-card-image" href="{{ site.baseurl }}{{ post.url }}">
+        {% if post.image %}
+        <img src="{% if post.image contains '://' %}{{ post.image }}{% else %}{{ site.baseurl }}/{{ post.image }}{% endif %}" alt="{{ post.title }}">
+        {% else %}
+        <div class="author-card-placeholder">No image</div>
+        {% endif %}
+      </a>
+      <div class="author-card-body">
+        <a class="author-card-title" href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a>
+        <p class="author-card-excerpt">{{ post.excerpt | strip_html | truncatewords: 22 }}</p>
+        <div class="author-card-meta">
+          <span class="author-card-date">{{ post.date | date: "%b %d, %Y" }}</span>
+          {% if post.categories %}
+          <div class="author-card-tags">
+            {% assign sortedCategories = post.categories | sort %}
+            {% for category in sortedCategories %}
+            <a class="tag-pill" href="{{site.baseurl}}/categories#{{ category | replace: " ","-" }}">{{ category }}</a>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p>No posts yet.</p>
+  {% endif %}
+</div>

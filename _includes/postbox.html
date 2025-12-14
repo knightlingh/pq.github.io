@@ -40,13 +40,15 @@
                 {% for aid in author_list %}
                     {% assign author_id = aid | strip %}
                     {% assign author = site.authors[author_id] %}
-                    {% if author.avatar %}
-                    <img class="author-thumb" src="{{site.baseurl}}/{{ author.avatar }}" alt="{{ author.display_name | default: author_id }}">
-                    {% elsif author.gravatar %}
-                    <img class="author-thumb" src="https://www.gravatar.com/avatar/{{ author.gravatar }}?s=250&d=mm&r=x" alt="{{ author.display_name | default: author_id }}">
-                    {% else %}
-                    <span class="author-thumb avatar-initial">{{ author_id | slice: 0, 1 | upcase }}</span>
-                    {% endif %}
+                    <a href="{{ site.baseurl }}/author/{{ author_id }}/" class="d-inline-block">
+                        {% if author.avatar %}
+                        <img class="author-thumb" src="{{site.baseurl}}/{{ author.avatar }}" alt="{{ author.display_name | default: author_id }}">
+                        {% elsif author.gravatar %}
+                        <img class="author-thumb" src="https://www.gravatar.com/avatar/{{ author.gravatar }}?s=250&d=mm&r=x" alt="{{ author.display_name | default: author_id }}">
+                        {% else %}
+                        <span class="author-thumb avatar-initial">{{ author_id | slice: 0, 1 | upcase }}</span>
+                        {% endif %}
+                    </a>
                 {% endfor %}
                 </span>
                 </span>
@@ -56,11 +58,7 @@
                         {% assign author_id = aid | strip %}
                         {% assign author = site.authors[author_id] %}
                         {% assign display_name = author.display_name | default: author_id %}
-                        {% if author.web %}
-                        <a target="_blank" href="{{ author.web }}">{{ display_name }}</a>
-                        {% else %}
-                        {{ display_name }}
-                        {% endif %}
+                        <a href="{{ site.baseurl }}/author/{{ author_id }}/">{{ display_name }}</a>
                         {% unless forloop.last %}, {% endunless %}
                     {% endfor %}
                 </span><br/>
