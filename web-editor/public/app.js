@@ -296,13 +296,35 @@ function handleToolbar(action){
   else if(action === 'code') replace('``\n' + (text.slice(start,end) || 'code') + '\n```');
 }
 
+function normalizeAssetUrl(src){
+  const origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+  const val = String(src || '').trim();
+  if(!val) return '';
+  if(/^https?:\/\//i.test(val) || val.startsWith('data:') || val.startsWith('blob:')) return val;
+  if(val.startsWith('/assets/')) return origin + val;
+  if(val.startsWith('assets/')) return origin + '/' + val;
+  return val;
+}
+
+function rewriteAssetImages(html){
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = html;
+  wrapper.querySelectorAll('img').forEach(img=>{
+    const normalized = normalizeAssetUrl(img.getAttribute('src'));
+    if(normalized) img.setAttribute('src', normalized);
+  });
+  return wrapper.innerHTML;
+}
+
 // use marked for rendering
 function renderPreview(){
   const md = textarea.value || '';
   try{ let html = marked.parse(md);
+    html = rewriteAssetImages(html);
     // if an image URL is set in preview path, display it at top of preview
     const imgPath = previewImagePathEl && previewImagePathEl.textContent && previewImagePathEl.textContent !== '(none)' ? previewImagePathEl.textContent : '';
-    if(imgPath){ html = `<p><img src="${imgPath}" style="max-width:100%;border-radius:6px;margin-bottom:10px"></p>` + html; }
+    const normalizedCover = normalizeAssetUrl(imgPath);
+    if(normalizedCover){ html = `<p><img src="${normalizedCover}" style="max-width:100%;border-radius:6px;margin-bottom:10px"></p>` + html; }
     previewArea.innerHTML = html;
   }
   catch(e){ previewArea.textContent = md; }
