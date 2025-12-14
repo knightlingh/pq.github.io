@@ -12,6 +12,7 @@
 <body>
   <div class="app">
     <aside class="sidebar">
+      <button id="collapseSidebar" class="btn collapse-toggle" title="Collapse sidebar" aria-label="Collapse sidebar">⬅</button>
       <div class="brand">
         <h2>✏️ Story Writer</h2>
         <small>📚 Create & Share Stories</small>
@@ -39,8 +40,19 @@
         </div>
         <div class="meta-field">
           <label>👤 Authors</label>
-          <input id="author" placeholder="luca, oscar" list="authorOptions" />
-          <datalist id="authorOptions"></datalist>
+          <input id="author" type="hidden" />
+          <div style="display:flex;gap:6px;align-items:flex-start;position:relative;flex:1;">
+            <div id="authorsDropdown" class="custom-dropdown" style="flex:1;">
+              <div id="authorsButton" class="dropdown-button">Pick authors...</div>
+              <div id="authorsMenu" class="dropdown-menu" style="display:none;">
+                <div id="authorsList" class="categories-list"></div>
+                <div style="border-top:3px solid #4ecdc4;padding:8px;display:flex;gap:6px;">
+                  <input id="authorsNewInput" placeholder="New author" style="flex:1;padding:8px;border:2px solid #4ecdc4;border-radius:8px;font-size:13px;font-family:inherit;" />
+                  <button id="authorsNewBtn" class="btn" type="button" style="white-space:nowrap;padding:6px 10px;">Add</button>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="field-error" id="error-author"></div>
         </div>
         <div class="meta-field">

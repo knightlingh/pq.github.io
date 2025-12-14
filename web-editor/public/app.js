@@ -14,7 +14,12 @@ const togglePreviewBtn = document.getElementById('togglePreview');
 const titleInput = document.getElementById('title');
 const dateInput = document.getElementById('date');
 const authorInput = document.getElementById('author');
-const authorDatalist = document.getElementById('authorOptions');
+const collapseSidebarBtn = document.getElementById('collapseSidebar');
+const authorsButton = document.getElementById('authorsButton');
+const authorsMenu = document.getElementById('authorsMenu');
+const authorsList = document.getElementById('authorsList');
+const authorsNewInput = document.getElementById('authorsNewInput');
+const authorsNewBtn = document.getElementById('authorsNewBtn');
 const categoriesButton = document.getElementById('categoriesButton');
 const categoriesMenu = document.getElementById('categoriesMenu');
 const categoriesList = document.getElementById('categoriesList');
@@ -110,6 +115,10 @@ function validateMetadata(title, date, authors, categories, image){
 const hiddenFile = document.createElement('input'); hiddenFile.type = 'file'; hiddenFile.style.display = 'none'; document.body.appendChild(hiddenFile);
 hiddenFile.addEventListener('change', async () => {
   const f = hiddenFile.files[0]; if(!f) return;
+  await handleImageFile(f);
+});
+
+async function handleImageFile(f, silentStatus){
   const fd = new FormData(); fd.append('image', f);
   // always upload to assets/images/uploads
   fd.append('folder', 'uploads');
@@ -130,10 +139,11 @@ hiddenFile.addEventListener('change', async () => {
   if(j.url){
     const normalized = j.url.replace(/^\//, '');
     previewImagePathEl.textContent = normalized;
-    showStatus((j.duplicate ? 'Reused existing image: ' : 'Uploaded: ') + normalized, 'success');
+    if(!silentStatus) showStatus((j.duplicate ? 'Reused existing image: ' : 'Uploaded: ') + normalized, 'success');
+    insertImageMarkdown(normalized);
     renderPreview(); checkDirty();
   } else showStatus('Upload failed', 'error');
-});
+}
 
 // toggle dropdown menu
 categoriesButton.addEventListener('click', (e) => {
@@ -146,6 +156,19 @@ categoriesButton.addEventListener('click', (e) => {
 document.addEventListener('click', (e) => {
   if(!document.getElementById('categoriesDropdown').contains(e.target)){
     categoriesMenu.style.display = 'none';
+  }
+});
+
+// authors dropdown
+authorsButton.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const isOpen = authorsMenu.style.display !== 'none';
+  authorsMenu.style.display = isOpen ? 'none' : 'block';
+});
+
+document.addEventListener('click', (e) => {
+  if(!document.getElementById('authorsDropdown').contains(e.target)){
+    authorsMenu.style.display = 'none';
   }
 });
 
@@ -171,6 +194,28 @@ categoriesNewInput.addEventListener('keydown', (e) => {
   if(e.key === 'Enter'){ e.preventDefault(); categoriesNewBtn.click(); }
 });
 
+// add new author from input
+authorsNewBtn.addEventListener('click', () => {
+  const name = authorsNewInput.value.trim();
+  if(!name) return;
+  const exists = Array.from(authorsList.querySelectorAll('input[type="checkbox"]')).some(cb=>cb.value===name);
+  if(!exists){ 
+    const item = document.createElement('div'); 
+    item.className = 'category-item';
+    item.innerHTML = `<input type="checkbox" value="${name}" id="author-${name}" checked /><label for="author-${name}">${name}</label>`;
+    item.querySelector('input').addEventListener('change', ()=>{ syncAuthorInput(); checkDirty(); updateAuthorsButton(); updateFilenamePreview(); });
+    authorsList.appendChild(item); 
+    authorsNewInput.value = '';
+    updateAuthorsButton(); 
+    syncAuthorInput();
+    checkDirty();
+  }
+});
+
+authorsNewInput.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){ e.preventDefault(); authorsNewBtn.click(); }
+});
+
 // ...existing code...
 document.querySelectorAll('.toolbar button[data-action]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -178,9 +223,47 @@ document.querySelectorAll('.toolbar button[data-action]').forEach(btn=>{
   });
 });
 
+// drag & drop image into editor
+['dragenter','dragover','dragleave','drop'].forEach(evt=>{
+  textarea.addEventListener(evt, e=>{
+    e.preventDefault(); e.stopPropagation();
+  });
+});
+
+textarea.addEventListener('drop', async (e)=>{
+  const dt = e.dataTransfer;
+  if(!dt || !dt.files || !dt.files.length) return;
+  const file = dt.files[0];
+  if(file && file.type && file.type.startsWith('image/')){
+    await handleImageFile(file);
+  }
+});
+
+// paste image to insert
+textarea.addEventListener('paste', async (e)=>{
+  const items = e.clipboardData && e.clipboardData.items ? Array.from(e.clipboardData.items) : [];
+  const fileItem = items.find(it=> it.kind === 'file' && it.type && it.type.startsWith('image/'));
+  if(fileItem){
+    e.preventDefault();
+    const file = fileItem.getAsFile();
+    if(file) await handleImageFile(file);
+  }
+});
+
 document.getElementById('togglePreview').addEventListener('click', ()=>{
   isPreviewVisible = !isPreviewVisible; previewArea.style.display = isPreviewVisible ? 'block' : 'none'; resizer.style.display = isPreviewVisible ? 'block' : 'none';
 });
+
+// collapse sidebar
+if(collapseSidebarBtn){
+  collapseSidebarBtn.addEventListener('click', ()=>{
+    const sidebar = document.querySelector('.sidebar');
+    if(!sidebar) return;
+    sidebar.classList.toggle('collapsed');
+    collapseSidebarBtn.textContent = sidebar.classList.contains('collapsed') ? '➡' : '⬅';
+    collapseSidebarBtn.setAttribute('aria-label', sidebar.classList.contains('collapsed') ? 'Expand sidebar' : 'Collapse sidebar');
+  });
+}
 
 function handleToolbar(action){
   const ta = textarea; const start = ta.selectionStart, end = ta.selectionEnd, text = ta.value;
@@ -280,13 +363,17 @@ async function loadAuthors(){
         authors.forEach(a=>{ if(a) set.add(a); });
       }
     });
-    if(authorDatalist){
-      authorDatalist.innerHTML = '';
+    if(authorsList){
+      authorsList.innerHTML = '';
       Array.from(set).sort().forEach(a=>{
-        const opt = document.createElement('option');
-        opt.value = a;
-        authorDatalist.appendChild(opt);
+        const item = document.createElement('div'); 
+        item.className = 'category-item';
+        item.innerHTML = `<input type="checkbox" value="${a}" id="author-${a}" /><label for="author-${a}">${a}</label>`;
+        item.querySelector('input').addEventListener('change', ()=>{ syncAuthorInput(); checkDirty(); updateAuthorsButton(); updateFilenamePreview(); });
+        authorsList.appendChild(item); 
       });
+      updateAuthorsButton();
+      syncAuthorInput();
     }
   }catch(e){ console.warn(e); }
 }
@@ -305,6 +392,7 @@ async function loadPost(filename){
     dateInput.value = meta.date || filenameDate || '';
     const authorsRaw = meta.authors || meta.author || '';
     const authors = normalizeAuthors(authorsRaw);
+    setSelectedAuthors(authors);
     authorInput.value = authors.join(', ');
     const catsRaw = meta.categories || '';
     // parse categories into array
@@ -399,6 +487,39 @@ function updateCategoriesButton(){
   }
 }
 
+// helper: get/set selected authors
+function getSelectedAuthors(){
+  if(!authorsList) return [];
+  const checkboxes = authorsList.querySelectorAll('input[type="checkbox"]:checked');
+  return Array.from(checkboxes).map(cb => cb.value).filter(Boolean);
+}
+function setSelectedAuthors(arr){
+  arr = (arr || []).map(a=>String(a));
+  if(!authorsList) return;
+  authorsList.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.checked = arr.includes(cb.value);
+  });
+  updateAuthorsButton();
+  syncAuthorInput();
+}
+function updateAuthorsButton(){
+  const selected = getSelectedAuthors();
+  if(selected.length === 0){
+    authorsButton.textContent = 'Select authors...';
+  } else if(selected.length === 1){
+    authorsButton.textContent = selected[0];
+  } else {
+    authorsButton.textContent = selected.length + ' authors';
+  }
+}
+
+function syncAuthorInput(){
+  if(authorInput){
+    const authors = getSelectedAuthors();
+    authorInput.value = authors.join(', ');
+  }
+}
+
 // new post button
 newBtn.addEventListener('click', ()=>{ current = null; 
    titleInput.value=''; dateInput.value=new Date().toISOString().slice(0,10); authorInput.value=''; 
@@ -407,12 +528,13 @@ newBtn.addEventListener('click', ()=>{ current = null;
   loadAuthors();
   // clear multi-select
   if(categoriesList) { Array.from(categoriesList.querySelectorAll('input[type="checkbox"]')).forEach(cb => cb.checked = false); updateCategoriesButton(); }
+  if(authorsList) { Array.from(authorsList.querySelectorAll('input[type="checkbox"]')).forEach(cb => cb.checked = false); updateAuthorsButton(); syncAuthorInput(); }
   previewImagePathEl.textContent='(none)'; textarea.value=''; renderPreview(); updateFilenamePreview(); updateActiveList(); captureState(); });
 
 function updateFilenamePreview(){
   const title = titleInput.value || 'post';
   const date = dateInput.value || new Date().toISOString().slice(0,10);
-  const authors = normalizeAuthors(authorInput.value);
+  const authors = normalizeAuthors(authorInput.value || getSelectedAuthors());
   const generated = buildFilename(date, title, authors);
   previewFilenameEl.textContent = generated;
 }
@@ -448,7 +570,7 @@ async function saveAs(filename){ const title = titleInput.value || ''; const dat
   if(!filename || !filename.endsWith('.md')) return alert('Filename must end with .md');
   if(!filenameValidPrefix(filename)) return alert('Filename must start with YYYY-MM-DD-');
   const catsYaml = allCats.map(c=>`"${c}"`).join(', ');
-  const authorsYaml = authors.join(', ');
+  const authorsYaml = authors.map(a=>`"${a}"`).join(', ');
   const meta = ['---', `layout: post`, `title: "${title}"`, `authors: [${authorsYaml}]`, `date: ${date}`, `categories: [${catsYaml}]`, `image: ${image}`, '---', ''].join('\n');
   const full = meta + '\n' + content + '\n';
   const method = current === filename ? 'PUT' : 'POST'; const url = method === 'POST' ? '/api/posts' : '/api/posts/' + filename; const body = method === 'POST' ? { filename, content: full } : { content: full };
@@ -529,6 +651,7 @@ document.getElementById('restoreDraftBtn').addEventListener('click', ()=>{
   const d = loadDraft(); if(!d) return showStatus('No draft available', 'error'); const data = d.data;
   titleInput.value = data.title; dateInput.value = data.date; const authorsFromDraft = Array.isArray(data.authors) ? data.authors.join(', ') : (data.authors || data.author || '');
   authorInput.value = authorsFromDraft;
+  setSelectedAuthors(parseAuthors(authorsFromDraft));
   // restore categories (array or comma string)
   const cats = Array.isArray(data.categories) ? data.categories : (data.categories ? String(data.categories).split(',').map(s=>s.trim()).filter(Boolean) : []);
   loadCategories().then(()=>{ if(cats.length) setSelectedCategories(cats); });
@@ -536,9 +659,9 @@ document.getElementById('restoreDraftBtn').addEventListener('click', ()=>{
 });
 
 // undo/redo button handlers
-document.getElementById('undoBtn').addEventListener('click', ()=>{ const state = popUndo(); if(state){ titleInput.value=state.title; dateInput.value=state.date; const authorsVal = Array.isArray(state.authors) ? state.authors.join(', ') : (state.authors || state.author || ''); authorInput.value=authorsVal; const sc = Array.isArray(state.categories) ? state.categories : (state.categories ? String(state.categories).split(',').map(s=>s.trim()).filter(Boolean) : []); if(sc.length) setSelectedCategories(sc); previewImagePathEl.textContent = state.image || '(none)'; textarea.value=state.content; renderPreview(); checkDirty(); } });
+document.getElementById('undoBtn').addEventListener('click', ()=>{ const state = popUndo(); if(state){ titleInput.value=state.title; dateInput.value=state.date; const authorsVal = Array.isArray(state.authors) ? state.authors.join(', ') : (state.authors || state.author || ''); authorInput.value=authorsVal; setSelectedAuthors(parseAuthors(authorsVal)); const sc = Array.isArray(state.categories) ? state.categories : (state.categories ? String(state.categories).split(',').map(s=>s.trim()).filter(Boolean) : []); if(sc.length) setSelectedCategories(sc); previewImagePathEl.textContent = state.image || '(none)'; textarea.value=state.content; renderPreview(); checkDirty(); } });
 
-document.getElementById('redoBtn').addEventListener('click', ()=>{ const state = popRedo(); if(state){ titleInput.value=state.title; dateInput.value=state.date; const authorsVal = Array.isArray(state.authors) ? state.authors.join(', ') : (state.authors || state.author || ''); authorInput.value=authorsVal; const sc = Array.isArray(state.categories) ? state.categories : (state.categories ? String(state.categories).split(',').map(s=>s.trim()).filter(Boolean) : []); if(sc.length) setSelectedCategories(sc); previewImagePathEl.textContent = state.image || '(none)'; textarea.value=state.content; renderPreview(); checkDirty(); } });
+document.getElementById('redoBtn').addEventListener('click', ()=>{ const state = popRedo(); if(state){ titleInput.value=state.title; dateInput.value=state.date; const authorsVal = Array.isArray(state.authors) ? state.authors.join(', ') : (state.authors || state.author || ''); authorInput.value=authorsVal; setSelectedAuthors(parseAuthors(authorsVal)); const sc = Array.isArray(state.categories) ? state.categories : (state.categories ? String(state.categories).split(',').map(s=>s.trim()).filter(Boolean) : []); if(sc.length) setSelectedCategories(sc); previewImagePathEl.textContent = state.image || '(none)'; textarea.value=state.content; renderPreview(); checkDirty(); } });
 
 // Draft autosave and undo/redo
 const DRAFT_KEY = 'pq-editor-draft';
@@ -638,7 +761,7 @@ async function saveAs(filename){ const title = titleInput.value || ''; const dat
   }
 
   const catsYaml = selectedCats.map(c=>`"${c}"`).join(', ');
-  const authorsYaml = authors.join(', ');
+  const authorsYaml = authors.map(a=>`"${a}"`).join(', ');
   const meta = ['---', `layout: post`, `title: "${title}"`, `authors: [${authorsYaml}]`, `date: ${date}`, `categories: [${catsYaml}]`, `image: ${image}`, '---', ''].join('\n');
   const full = meta + '\n' + content + '\n';
   const method = current === filename ? 'PUT' : 'POST'; const url = method === 'POST' ? '/api/posts' : '/api/posts/' + filename; const body = method === 'POST' ? { filename, content: full } : { content: full };
@@ -687,3 +810,13 @@ modalDiscard.addEventListener('click', ()=>{
 });
 
 modalCancel.addEventListener('click', hideConfirmModal);
+function insertImageMarkdown(path){
+  if(!textarea || !path) return;
+  const alt = titleInput && titleInput.value ? titleInput.value : 'image';
+  const ta = textarea; const start = ta.selectionStart, end = ta.selectionEnd;
+  const snippet = `![${alt}](${path})`;
+  ta.value = ta.value.slice(0,start) + snippet + ta.value.slice(end);
+  const pos = start + snippet.length;
+  ta.selectionStart = ta.selectionEnd = pos;
+  ta.focus();
+}
