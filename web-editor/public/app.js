@@ -828,9 +828,10 @@ modalDiscard.addEventListener('click', ()=>{
 modalCancel.addEventListener('click', hideConfirmModal);
 function insertImageMarkdown(path){
   if(!textarea || !path) return;
+  const normalizedPath = path.startsWith('/') ? path : '/' + path;
   const alt = titleInput && titleInput.value ? titleInput.value : 'image';
   const ta = textarea; const start = ta.selectionStart, end = ta.selectionEnd;
-  const snippet = `![${alt}](${path})`;
+  const snippet = `![${alt}](${normalizedPath})`;
   ta.value = ta.value.slice(0,start) + snippet + ta.value.slice(end);
   const pos = start + snippet.length;
   ta.selectionStart = ta.selectionEnd = pos;
