@@ -5,6 +5,7 @@ authors: ["luca", "oscar"]
 date: 2021-06-01
 categories: ["diy", "painting"]
 image: assets/images/uploads/2021-06-01-cardboard-project-luca.JPG
+featured: true
 ---
 
 

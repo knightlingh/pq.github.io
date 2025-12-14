@@ -5,6 +5,7 @@ authors: ["luca", "oscar"]
 date: 2024-12-20
 categories: ["baking"]
 image: assets/images/uploads/2024-12-20-silly-cookies-luca.jpeg
+featured: true
 ---
 
 And more:
