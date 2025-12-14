@@ -304,9 +304,22 @@ section.recent-posts {
 }
 
 .author-page {
-    max-width: 980px;
+    max-width: 1024px;
     margin: 0 auto 40px;
-    padding: 0 15px;
+    padding: 0;
+}
+
+.page-container.is-author-max {
+    max-width: 1024px;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+@media (max-width: 768px) {
+    .page-container.is-author-max {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
 }
 
 .author-hero {

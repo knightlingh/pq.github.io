@@ -10,6 +10,7 @@ title: Home
 {% assign older_pool = posts_with_images | slice: 8, 50 %}
 {% assign bonus_old = older_pool | sample: 2 %}
 {% assign slider_posts = recent_posts | concat: bonus_old %}
+{% assign all_posts = site.posts | sort: "date" | reverse %}
 
 <section class="hero-slider">
   <div class="section-title">
@@ -138,9 +139,9 @@ title: Home
 
     </div>
 
-    <div class="masonry-grid listrecent" data-next-url="{% if paginator.next_page %}{{ paginator.next_page_path | relative_url }}{% endif %}">
+    <div class="masonry-grid listrecent">
 
-        {% for post in paginator.posts %}
+        {% for post in all_posts %}
 
         {% include postbox.html %}
 
@@ -149,45 +150,3 @@ title: Home
     </div>
 
 </section>
-
-<script>
-(function(){
-  const grid = document.querySelector('.masonry-grid');
-  if(!grid) return;
-  let nextUrl = grid.dataset.nextUrl || null;
-  let loading = false;
-
-  function appendPosts(html){
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const newGrid = doc.querySelector('.masonry-grid');
-    if(!newGrid) return;
-    nextUrl = newGrid.dataset.nextUrl || null;
-    const items = newGrid.children;
-    Array.from(items).forEach(node=>{
-      grid.appendChild(node);
-    });
-  }
-
-  async function loadMore(){
-    if(loading || !nextUrl) return;
-    loading = true;
-    try{
-      const res = await fetch(nextUrl);
-      const text = await res.text();
-      appendPosts(text);
-    }catch(e){ console.warn('Load more failed', e); }
-    loading = false;
-  }
-
-  function onScroll(){
-    if(!nextUrl) return;
-    const scrollPos = window.innerHeight + window.scrollY;
-    const trigger = document.body.offsetHeight - 600;
-    if(scrollPos >= trigger){
-      loadMore();
-    }
-  }
-
-  window.addEventListener('scroll', onScroll, { passive: true });
-})();
-</script>
