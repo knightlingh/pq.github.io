@@ -5,7 +5,9 @@ title: "Games"
 
 {% assign hero_title = page.title | default: "Games" %}
 {% assign hero_image = page.image %}
-{% assign game_posts = site.posts | where_exp: "post", "post.categories contains 'game' or post.categories contains 'games'" | sort: "date" | reverse %}
+{% assign game_posts_game = site.posts | where_exp: "post", "post.categories contains 'game'" %}
+{% assign game_posts_games = site.posts | where_exp: "post", "post.categories contains 'games'" %}
+{% assign game_posts = game_posts_game | concat: game_posts_games | uniq | sort: "date" | reverse %}
 
 <div class="author-page games-page">
   {% if page.content and page.content != "" %}
