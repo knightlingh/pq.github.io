@@ -97,14 +97,6 @@ post_class: post-template
                     {% if author_list.size == 1 and primary_author and primary_author.description and primary_author.description != primary_author.display_name %}
                     <span class="author-description">{{ primary_author.description }}</span>
                     {% endif %}
-                    {% if page.categories %}
-                    <div class="post-meta-tags">
-                        {% assign sortedCategories = page.categories | sort %}
-                        {% for category in sortedCategories %}
-                        <a class="tag-pill" href="{{site.baseurl}}/categories#{{ category | replace: " ","-" }}">{{ category }}</a>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
                 </div>
             </div>
             {% endif %}
