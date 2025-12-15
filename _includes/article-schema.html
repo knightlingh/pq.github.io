@@ -1,0 +1,63 @@
+{%- comment -%}
+  Article JSON-LD to boost SEO. Uses post meta (title, description/excerpt, dates, authors, image, url).
+{%- endcomment -%}
+{%- assign is_post = page.layout == "post" -%}
+{%- if is_post -%}
+  {%- assign raw_description = page.description | default: page.excerpt -%}
+  {%- assign clean_description = raw_description | strip_html | strip_newlines | truncate: 160 -%}
+  {%- assign page_url = page.url | absolute_url -%}
+
+  {%- assign image_url = nil -%}
+  {%- if page.image -%}
+    {%- if page.image contains '://' -%}
+      {%- assign image_url = page.image -%}
+    {%- else -%}
+      {%- assign image_url = page.image | prepend: '/' | absolute_url -%}
+    {%- endif -%}
+  {%- endif -%}
+
+  {%- assign author_ids = page.authors | default: page.author | default: "" -%}
+  {%- assign author_array = author_ids -%}
+  {%- unless author_array == empty or author_array == nil -%}
+    {%- unless author_array.size -%}
+      {%- assign author_array = author_array | split: ',' -%}
+    {%- endunless -%}
+  {%- endunless -%}
+
+  {%- capture authors_json -%}
+    {%- if author_array and author_array != empty -%}
+      [
+        {%- for aid in author_array -%}
+          {%- assign author_id = aid | strip -%}
+          {%- assign author_obj = site.authors[author_id] -%}
+          {%- assign author_name = author_obj.display_name | default: author_id -%}
+          { "@type": "Person", "name": {{ author_name | jsonify }} }{%- unless forloop.last -%},{%- endunless -%}
+        {%- endfor -%}
+      ]
+    {%- endif -%}
+  {%- endcapture -%}
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ page.title | jsonify }},
+  "description": {{ clean_description | default: page.title | jsonify }},
+  "datePublished": "{{ page.date | date: "%Y-%m-%d" }}",
+  "dateModified": "{{ page.last_modified_at | default: page.date | date: "%Y-%m-%d" }}",
+  "mainEntityOfPage": {{ page_url | jsonify }},
+  {%- if image_url %}"image": {{ image_url | jsonify }},{%- endif -%}
+  {%- if authors_json and authors_json != "" %}"author": {{ authors_json | strip }} ,{%- endif -%}
+  "publisher": {
+    "@type": "Organization",
+    "name": {{ site.title | default: site.name | jsonify }},
+    {%- if site.logo -%}
+    "logo": {
+      "@type": "ImageObject",
+      "url": {{ site.logo | prepend: '/' | absolute_url | jsonify }}
+    }
+    {%- endif -%}
+  }
+}
+</script>
+{%- endif -%}
