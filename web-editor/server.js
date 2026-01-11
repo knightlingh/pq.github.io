@@ -234,15 +234,25 @@ async function handleImageRename(from, to) {
   const toFull = assertWithinUploads(to);
   const toDir = path.dirname(toFull);
   await fs.mkdir(toDir, { recursive: true });
-  // if target exists, reuse it
-  try {
-    await fs.access(toFull);
-    if (fromFull !== toFull) {
-      try { await fs.unlink(fromFull); } catch (e) { /* ignore */ }
-    }
+  if (fromFull === toFull) {
     return '/' + path.relative(ROOT, toFull).replace(/\\/g, '/');
+  }
+  let fromExists = true;
+  try {
+    await fs.access(fromFull);
   } catch (e) {
-    // target missing -> move
+    fromExists = false;
+  }
+  if (!fromExists) {
+    // keep existing target if source is missing
+    await fs.access(toFull);
+    return '/' + path.relative(ROOT, toFull).replace(/\\/g, '/');
+  }
+  // overwrite existing target so updated covers replace old files
+  try {
+    await fs.unlink(toFull);
+  } catch (e) {
+    if (e.code !== 'ENOENT') throw e;
   }
   await fs.rename(fromFull, toFull);
   return '/' + path.relative(ROOT, toFull).replace(/\\/g, '/');

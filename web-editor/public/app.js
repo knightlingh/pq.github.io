@@ -27,6 +27,7 @@ const categoriesNewInput = document.getElementById('categoriesNewInput');
 const categoriesNewBtn = document.getElementById('categoriesNewBtn');
 const previewImagePathEl = document.getElementById('previewImagePath');
 const previewFilenameEl = document.getElementById('previewFilename');
+const featuredInput = document.getElementById('featured');
 
 let current = null;
 let isPreviewVisible = true;
@@ -58,6 +59,11 @@ function normalizeAuthors(raw){
 function primaryAuthor(raw){
   const authors = normalizeAuthors(raw);
   return authors.length ? authors[0] : '';
+}
+
+function parseFeatured(raw){
+  const val = String(raw || '').trim().toLowerCase();
+  return val === 'true' || val === 'yes' || val === '1' || val === 'on';
 }
 
 // status indicator helper
@@ -446,6 +452,9 @@ async function loadPost(filename){
     if(cats.length){ await loadCategories(); setSelectedCategories(cats); }
     else { /* no categories selected */ }
     textarea.value = content;
+  if(featuredInput){
+    featuredInput.checked = parseFeatured(meta.featured);
+  }
   previewImagePathEl.textContent = meta.image || '(none)';
   updateFilenamePreview();
 } else { textarea.value = raw; }
@@ -567,6 +576,7 @@ newBtn.addEventListener('click', ()=>{ current = null;
   // clear multi-select
   if(categoriesList) { Array.from(categoriesList.querySelectorAll('input[type="checkbox"]')).forEach(cb => cb.checked = false); updateCategoriesButton(); }
   if(authorsList) { Array.from(authorsList.querySelectorAll('input[type="checkbox"]')).forEach(cb => cb.checked = false); updateAuthorsButton(); syncAuthorInput(); }
+  if(featuredInput) featuredInput.checked = false;
   previewImagePathEl.textContent='(none)'; textarea.value=''; renderPreview(); updateFilenamePreview(); updateActiveList(); captureState(); });
 
 function updateFilenamePreview(){
@@ -652,6 +662,7 @@ function captureState(){
     date: dateInput.value,
     authors: authorInput.value,
     categories: getSelectedCategories(),
+    featured: featuredInput ? featuredInput.checked : false,
     image: previewImagePathEl.textContent || '',
     content: textarea.value
   };
@@ -664,6 +675,7 @@ function checkDirty(){
     date: dateInput.value,
     authors: authorInput.value,
     categories: getSelectedCategories(),
+    featured: featuredInput ? featuredInput.checked : false,
     image: previewImagePathEl.textContent || '',
     content: textarea.value
   };
@@ -671,15 +683,18 @@ function checkDirty(){
   updateUnsavedUI();
 }
 
-function captureSnapshot(){ return { title: titleInput.value, date: dateInput.value, authors: authorInput.value, categories: getSelectedCategories(), image: previewImagePathEl.textContent || '', content: textarea.value }; }
+function captureSnapshot(){ return { title: titleInput.value, date: dateInput.value, authors: authorInput.value, categories: getSelectedCategories(), featured: featuredInput ? featuredInput.checked : false, image: previewImagePathEl.textContent || '', content: textarea.value }; }
 
 // listen for input changes to mark dirty
-[titleInput, dateInput, authorInput, textarea].forEach(el=> el.addEventListener('input', checkDirty));
+([titleInput, dateInput, authorInput, textarea, featuredInput].filter(Boolean)).forEach(el=>{
+  el.addEventListener('input', checkDirty);
+  el.addEventListener('change', checkDirty);
+});
 // checkbox changes handled in loadCategories
 
 // push undo on meaningful changes
 ['input','change'].forEach(evt=>{
-  [titleInput,dateInput,authorInput,textarea].forEach(el=> el.addEventListener(evt, ()=>{
+  [titleInput,dateInput,authorInput,textarea,featuredInput].filter(Boolean).forEach(el=> el.addEventListener(evt, ()=>{
     pushUndo(captureSnapshot()); scheduleAutosave();
   }));
 });
@@ -693,13 +708,14 @@ document.getElementById('restoreDraftBtn').addEventListener('click', ()=>{
   // restore categories (array or comma string)
   const cats = Array.isArray(data.categories) ? data.categories : (data.categories ? String(data.categories).split(',').map(s=>s.trim()).filter(Boolean) : []);
   loadCategories().then(()=>{ if(cats.length) setSelectedCategories(cats); });
+  if(featuredInput) featuredInput.checked = parseFeatured(data.featured);
   previewImagePathEl.textContent = data.image || '(none)'; textarea.value = data.content; renderPreview(); checkDirty(); captureState(); showStatus('Draft restored', 'success');
 });
 
 // undo/redo button handlers
-document.getElementById('undoBtn').addEventListener('click', ()=>{ const state = popUndo(); if(state){ titleInput.value=state.title; dateInput.value=state.date; const authorsVal = Array.isArray(state.authors) ? state.authors.join(', ') : (state.authors || state.author || ''); authorInput.value=authorsVal; setSelectedAuthors(parseAuthors(authorsVal)); const sc = Array.isArray(state.categories) ? state.categories : (state.categories ? String(state.categories).split(',').map(s=>s.trim()).filter(Boolean) : []); if(sc.length) setSelectedCategories(sc); previewImagePathEl.textContent = state.image || '(none)'; textarea.value=state.content; renderPreview(); checkDirty(); } });
+document.getElementById('undoBtn').addEventListener('click', ()=>{ const state = popUndo(); if(state){ titleInput.value=state.title; dateInput.value=state.date; const authorsVal = Array.isArray(state.authors) ? state.authors.join(', ') : (state.authors || state.author || ''); authorInput.value=authorsVal; setSelectedAuthors(parseAuthors(authorsVal)); const sc = Array.isArray(state.categories) ? state.categories : (state.categories ? String(state.categories).split(',').map(s=>s.trim()).filter(Boolean) : []); if(sc.length) setSelectedCategories(sc); if(featuredInput) featuredInput.checked = parseFeatured(state.featured); previewImagePathEl.textContent = state.image || '(none)'; textarea.value=state.content; renderPreview(); checkDirty(); } });
 
-document.getElementById('redoBtn').addEventListener('click', ()=>{ const state = popRedo(); if(state){ titleInput.value=state.title; dateInput.value=state.date; const authorsVal = Array.isArray(state.authors) ? state.authors.join(', ') : (state.authors || state.author || ''); authorInput.value=authorsVal; setSelectedAuthors(parseAuthors(authorsVal)); const sc = Array.isArray(state.categories) ? state.categories : (state.categories ? String(state.categories).split(',').map(s=>s.trim()).filter(Boolean) : []); if(sc.length) setSelectedCategories(sc); previewImagePathEl.textContent = state.image || '(none)'; textarea.value=state.content; renderPreview(); checkDirty(); } });
+document.getElementById('redoBtn').addEventListener('click', ()=>{ const state = popRedo(); if(state){ titleInput.value=state.title; dateInput.value=state.date; const authorsVal = Array.isArray(state.authors) ? state.authors.join(', ') : (state.authors || state.author || ''); authorInput.value=authorsVal; setSelectedAuthors(parseAuthors(authorsVal)); const sc = Array.isArray(state.categories) ? state.categories : (state.categories ? String(state.categories).split(',').map(s=>s.trim()).filter(Boolean) : []); if(sc.length) setSelectedCategories(sc); if(featuredInput) featuredInput.checked = parseFeatured(state.featured); previewImagePathEl.textContent = state.image || '(none)'; textarea.value=state.content; renderPreview(); checkDirty(); } });
 
 // Draft autosave and undo/redo
 const DRAFT_KEY = 'pq-editor-draft';
@@ -764,6 +780,7 @@ async function saveCurrent(){ if(!current) return; if(!filenameValidPrefix(curre
 async function saveAs(filename){ const title = titleInput.value || ''; const date = dateInput.value || ''; const authors = normalizeAuthors(authorInput.value); 
   // collect selected categories
   const selectedCats = getSelectedCategories();
+  const featured = featuredInput ? featuredInput.checked : false;
   const imageRaw = previewImagePathEl.textContent && previewImagePathEl.textContent !== '(none)' ? previewImagePathEl.textContent : '';
   let image = imageRaw ? imageRaw.replace(/^\//, '') : '';
   const content = textarea.value || '';
@@ -800,7 +817,10 @@ async function saveAs(filename){ const title = titleInput.value || ''; const dat
 
   const catsYaml = selectedCats.map(c=>`"${c}"`).join(', ');
   const authorsYaml = authors.map(a=>`"${a}"`).join(', ');
-  const meta = ['---', `layout: post`, `title: "${title}"`, `authors: [${authorsYaml}]`, `date: ${date}`, `categories: [${catsYaml}]`, `image: ${image}`, '---', ''].join('\n');
+  const metaLines = ['---', `layout: post`, `title: "${title}"`, `authors: [${authorsYaml}]`, `date: ${date}`];
+  if(featured) metaLines.push('featured: true');
+  metaLines.push(`categories: [${catsYaml}]`, `image: ${image}`, '---', '');
+  const meta = metaLines.join('\n');
   const full = meta + '\n' + content + '\n';
   const method = current === filename ? 'PUT' : 'POST'; const url = method === 'POST' ? '/api/posts' : '/api/posts/' + filename; const body = method === 'POST' ? { filename, content: full } : { content: full };
 
