@@ -1,9 +1,9 @@
 ---
 layout: post
 title: "This is The Lin Family"
-authors: [lins]
-date: 2025-04-05
-categories: ["family", "intro"]
+authors: ["lins"]
+date: 2022-04-05
+categories: ["family"]
 image: assets/images/lin-family.webp
 ---
 
