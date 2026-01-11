@@ -7,11 +7,7 @@ title: Home
 
 {% assign posts_with_images = site.posts | where_exp: "p","p.image" | sort: "date" | reverse %}
 {% assign slider_posts = posts_with_images | slice: 0,6 %}
-{% if paginator %}
-{% assign all_posts = paginator.posts %}
-{% else %}
 {% assign all_posts = site.posts | sort: "date" | reverse %}
-{% endif %}
 
 <section class="hero-slider">
   <div class="section-title">
@@ -163,9 +159,5 @@ title: Home
         {% endfor %}
 
     </div>
-
-    {% if paginator %}
-    {% include pagination.html %}
-    {% endif %}
 
 </section>

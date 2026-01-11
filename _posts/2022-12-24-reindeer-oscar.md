@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Reindeer-Oscar"
+title: "Reindeer"
 authors: [oscar]
 date: 2022-12-24
 categories: ["art", "painting"]
