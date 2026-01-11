@@ -1,0 +1,40 @@
+---
+layout: default
+title: "3D Printing & Figurines"
+---
+
+{% assign hero_title = page.title | default: "3D Printing & Figurines" %}
+{% assign hero_image = page.image %}
+{% assign print_posts_figurine = site.posts | where_exp: "post", "post.categories contains 'figurine'" %}
+{% assign print_posts_figurines = site.posts | where_exp: "post", "post.categories contains 'figurines'" %}
+{% assign print_posts_3d = site.posts | where_exp: "post", "post.categories contains '3d'" %}
+{% assign print_posts_3dprinting = site.posts | where_exp: "post", "post.categories contains '3dprinting'" %}
+{% assign print_posts_3dprinting_hyphen = site.posts | where_exp: "post", "post.categories contains '3d-printing'" %}
+{% assign print_posts_printing = site.posts | where_exp: "post", "post.categories contains 'printing'" %}
+{% assign print_posts = print_posts_figurine
+  | concat: print_posts_figurines
+  | concat: print_posts_3d
+  | concat: print_posts_3dprinting
+  | concat: print_posts_3dprinting_hyphen
+  | concat: print_posts_printing
+  | uniq
+  | sort: "date"
+  | reverse %}
+
+<div class="author-page printing-page">
+  {% if page.content and page.content != "" %}
+  <div class="author-about">
+    {{ page.content | markdownify }}
+  </div>
+  {% endif %}
+
+  {% if print_posts.size > 0 %}
+  <div class="masonry-grid listrecent">
+    {% for post in print_posts %}
+      {% include postbox.html %}
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="author-about games-empty">No 3D printing posts available yet.</p>
+  {% endif %}
+</div>
