@@ -9,3 +9,5 @@ featured: true
 ---
 
 Figurine painting - Chef. 3D print the figure, sanding, then paint with POSCA.
+
+![Chef](/assets/images/uploads/figurine_collection_oscard-tmp-mk9h53nc-h887.jpg)
