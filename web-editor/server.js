@@ -37,6 +37,11 @@ function sanitizeFilename(name) {
   return String(name || 'upload').replace(/[^a-zA-Z0-9.\-_]/g, '_');
 }
 
+function shouldOverwrite(req) {
+  const raw = req.body && req.body.overwrite;
+  return raw === true || raw === 'true' || raw === '1' || raw === 1;
+}
+
 function slugifySegment(value) {
   return String(value || '')
     .toLowerCase()
@@ -94,6 +99,9 @@ const upload = multer({
       const safeName = buildImageFilename(req, file.originalname);
       const target = path.join(dest, safeName);
       if (fssync.existsSync(target)) {
+        if (shouldOverwrite(req)) {
+          return cb(null, true);
+        }
         // already exists; remember its URL and skip saving
         req.duplicateUrl = '/' + path.relative(ROOT, target).replace(/\\/g, '/');
         return cb(null, false);

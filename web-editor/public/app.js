@@ -127,24 +127,43 @@ hiddenFile.addEventListener('change', async () => {
   currentImageMode = 'inline';
 });
 
+function getUploadsFilename(pathStr){
+  const normalized = String(pathStr || '').trim().replace(/^\//, '');
+  if(!normalized.startsWith('assets/images/uploads/')) return '';
+  const parts = normalized.split('/');
+  return parts[parts.length - 1];
+}
+
 async function handleImageFile(f, opts={}){
   const mode = opts.mode || 'inline';
   const silentStatus = opts.silentStatus;
-  const fd = new FormData(); fd.append('image', f);
-  // always upload to assets/images/uploads
-  fd.append('folder', 'uploads');
-  // attach a temp id so the uploaded filename is unique per preview session
-  const tempId = Date.now().toString(36);
-  fd.append('tempId', tempId);
   const dateVal = dateInput && dateInput.value ? dateInput.value : new Date().toISOString().slice(0,10);
   const titleVal = titleInput && titleInput.value ? titleInput.value : '';
   const authorVal = primaryAuthor(authorInput && authorInput.value ? authorInput.value : '');
   const ext = getImageExt(f.name);
-  const tempFilename = buildTempImageName(dateVal, titleVal, authorVal, ext, tempId);
-  fd.append('name', tempFilename);
+  let overwrite = false;
+  let uploadName = '';
+  if(mode === 'cover'){
+    const existingName = getUploadsFilename(previewImagePathEl && previewImagePathEl.textContent ? previewImagePathEl.textContent : '');
+    const existingExt = existingName ? getImageExt(existingName) : '';
+    if(existingName && existingExt.toLowerCase() === ext.toLowerCase()){
+      uploadName = existingName;
+      overwrite = true;
+    }
+  }
+  if(!uploadName){
+    const tempId = Date.now().toString(36);
+    uploadName = buildTempImageName(dateVal, titleVal, authorVal, ext, tempId);
+  }
+  const fd = new FormData();
+  // always upload to assets/images/uploads
+  fd.append('folder', 'uploads');
+  if(overwrite) fd.append('overwrite', 'true');
+  fd.append('name', uploadName);
   fd.append('author', authorVal);
   fd.append('title', titleInput && titleInput.value ? titleInput.value : '');
   fd.append('date', dateInput && dateInput.value ? dateInput.value : '');
+  fd.append('image', f);
   const res = await fetch('/api/upload', { method: 'POST', body: fd });
   const j = await res.json();
   if(j.url){
