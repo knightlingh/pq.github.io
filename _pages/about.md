@@ -16,10 +16,10 @@ comments: false
 
 <div class="col-md-4">
 
-<div class="sticky-top sticky-top-80">
+<!-- <div class="sticky-top sticky-top-80">
     <a href="https://www.buymeacoffee.com/thelinfamily" target="_blank">
         <img src="{{site.baseurl}}/assets/images/donut.webp" alt="Buy Me a Donut" style="height: 50px;">
     </a>
-</div>
+</div> -->
 </div>
 </div>
