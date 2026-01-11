@@ -6,11 +6,12 @@ title: Home
 {% if page.url == "/" %}
 
 {% assign posts_with_images = site.posts | where_exp: "p","p.image" | sort: "date" | reverse %}
-{% assign recent_posts = posts_with_images | slice: 0,8 %}
-{% assign older_pool = posts_with_images | slice: 8, 50 %}
-{% assign bonus_old = older_pool | sample: 2 %}
-{% assign slider_posts = recent_posts | concat: bonus_old %}
+{% assign slider_posts = posts_with_images | slice: 0,6 %}
+{% if paginator %}
+{% assign all_posts = paginator.posts %}
+{% else %}
 {% assign all_posts = site.posts | sort: "date" | reverse %}
+{% endif %}
 
 <section class="hero-slider">
   <div class="section-title">
@@ -22,7 +23,19 @@ title: Home
       {% for post in slider_posts %}
       <article class="hero-slide{% if forloop.first %} is-active{% endif %}">
         <a class="hero-slide__link" href="{{ post.url | relative_url }}">
-          <div class="hero-slide__image" style="background-image:url('{{ post.image | relative_url }}');"></div>
+          <div class="hero-slide__image">
+            {% assign loading = "lazy" %}
+            {% if forloop.index <= 2 %}
+            {% assign loading = "eager" %}
+            {% endif %}
+            <img
+              class="hero-slide__img"
+              src="{{ post.image | relative_url }}"
+              alt="{{ post.title }}"
+              loading="{{ loading }}"
+              decoding="async"
+              {% if forloop.first %}fetchpriority="high"{% endif %}>
+          </div>
           <div class="hero-slide__overlay">
             <p class="hero-slide__meta">{{ post.date | date: "%B %d, %Y" }}</p>
             <h3 class="hero-slide__title">{{ post.title }}</h3>
@@ -42,8 +55,9 @@ title: Home
 .hero-slider__viewport { position: relative; overflow: hidden; border-radius: 14px; background: transparent; box-shadow: none; padding: 6px 0; }
 .hero-slider__track { display: grid; grid-auto-flow: column; grid-auto-columns: 100%; transition: transform 0.6s ease; background: transparent; column-gap: 12px; align-items: stretch; }
 .hero-slide { position: relative; min-height: 340px; }
-.hero-slide__link { display: block; height: 100%; color: inherit; text-decoration: none; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
-.hero-slide__image { height: 100%; background-size: cover; background-repeat: no-repeat; background-position: center; filter: brightness(0.9); background-color: #0f172a; }
+.hero-slide__link { position: relative; display: block; min-height: inherit; color: inherit; text-decoration: none; border-radius: 12px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.hero-slide__image { position: absolute; inset: 0; background-color: #0f172a; }
+.hero-slide__img { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(0.9); }
 .hero-slide__overlay { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 1.2rem; }
 .hero-slide__meta { margin: 0 0 0.25rem; color: #d9e2ec; letter-spacing: 0.04em; font-weight: 600; }
 .hero-slide__title { margin: 0; color: #f8fbff; font-size: 1.6rem; line-height: 1.2; }
@@ -149,5 +163,9 @@ title: Home
         {% endfor %}
 
     </div>
+
+    {% if paginator %}
+    {% include pagination.html %}
+    {% endif %}
 
 </section>

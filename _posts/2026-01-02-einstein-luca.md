@@ -1,10 +1,10 @@
 ---
 layout: post
-title: "Einstein"
+title: "Albert"
 authors: ["luca"]
 date: 2026-01-02
 categories: ["figurine"]
-image: assets/images/uploads/2026-01-02-einstein-luca.jpg
+image: assets/images/uploads/2026-01-02-albert-luca.jpg
 featured: true
 ---
 
