@@ -1,12 +1,11 @@
 ---
 layout: post
 title: "Whale"
-authors: ["oscar"]
+authors: ["luca"]
 date: 2025-02-27
 featured: true
 categories: ["art"]
-image: assets/images/uploads/2025-02-27-whale-oscar.jpg
+image: assets/images/uploads/2025-02-27-whale-luca.jpg
 ---
 
 Whale
-
