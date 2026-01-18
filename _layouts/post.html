@@ -95,7 +95,7 @@ post_class: post-template
                     </div>
                 </div>
                 <div class="post-meta-details">
-                    <span class="post-date"><time class="post-date" datetime="{{ page.date | date:"%Y-%m-%d" }}">{{ page.date | date_to_string }}</time></span>
+                    <span class="post-date"><time class="post-date" datetime="{{ page.date | date:"%Y-%m" }}">{{ page.date | date: "%B %Y" }}</time></span>
                     {% if author_list.size == 1 and primary_author and primary_author.description and primary_author.description != primary_author.display_name %}
                     <span class="author-description">{{ primary_author.description }}</span>
                     {% endif %}
