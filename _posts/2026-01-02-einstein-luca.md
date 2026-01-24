@@ -3,8 +3,7 @@ layout: post
 title: "Albert"
 authors: ["luca"]
 date: 2026-01-02
-featured: true
-categories: ["3d_printing", "figurine"]
+categories: ["3d_printing"]
 image: assets/images/uploads/2026-01-02-albert-luca.jpg
 ---
 
